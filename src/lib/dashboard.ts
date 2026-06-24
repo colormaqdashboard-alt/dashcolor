@@ -67,7 +67,7 @@ const parseDate = (v: string | null): Date | null => {
 };
 
 export const fmtMoney = (n: number | null | undefined) => {
-  const v = n ?? 0;
+  const v = Number(n) || 0;
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 };
 
