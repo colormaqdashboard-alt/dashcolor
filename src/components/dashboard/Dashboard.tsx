@@ -124,9 +124,9 @@ export default function Dashboard() {
     const finalizados = projetos.filter(
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
-    const savingPrev = projetos.reduce((s, p) => s + (p.saving_previsto || 0), 0);
-    const savingAprov = projetos.reduce((s, p) => s + (p.saving_aprovado || 0), 0);
-    const investimento = projetos.reduce((s, p) => s + (p.investimento || 0), 0);
+    const savingPrev = projetos.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0);
+    const savingAprov = projetos.reduce((s, p) => s + (Number(p.saving_aprovado) || 0), 0);
+    const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
     const pctMedio =
       projetos.length === 0
         ? 0
@@ -224,7 +224,7 @@ export default function Dashboard() {
     const m = new Map<string, number>();
     projetos.forEach((p) => {
       const k = p.tipo || "Sem tipo";
-      m.set(k, (m.get(k) || 0) + (p.saving_previsto || 0));
+      m.set(k, (m.get(k) || 0) + (Number(p.saving_previsto) || 0));
     });
     return Array.from(m, ([name, value]) => ({ name, value }));
   }, [projetos]);
@@ -265,7 +265,7 @@ export default function Dashboard() {
     () =>
       pareto(
         projetos
-          .filter((p) => (p.saving_previsto || 0) > 0)
+          .filter((p) => (Number(p.saving_previsto) || 0) > 0)
           .map((p) => ({ label: p.projeto, value: p.saving_previsto || 0 }))
       ).slice(0, 20),
     [projetos]
@@ -286,7 +286,7 @@ export default function Dashboard() {
     () =>
       pareto(
         projetos
-          .filter((p) => (p.investimento || 0) > 0)
+          .filter((p) => (Number(p.investimento) || 0) > 0)
           .map((p) => ({ label: p.projeto, value: p.investimento || 0 }))
       ).slice(0, 20),
     [projetos]
@@ -299,8 +299,8 @@ export default function Dashboard() {
       semResponsavel: projetos.filter((p) => !p.responsavel_acao && !p.concluido),
       altoInvestBaixoSaving: projetos.filter(
         (p) =>
-          (p.investimento || 0) > 0 &&
-          (p.investimento || 0) > (p.saving_previsto || 0)
+          (Number(p.investimento) || 0) > 0 &&
+          (Number(p.investimento) || 0) > (Number(p.saving_previsto) || 0)
       ),
       parados: projetos.filter((p) => p.parado),
     };
