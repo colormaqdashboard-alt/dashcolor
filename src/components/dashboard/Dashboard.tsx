@@ -181,8 +181,8 @@ export default function Dashboard() {
       const k = p.lider || "Sem líder";
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
-      cur.saving += p.saving_previsto || 0;
-      cur.aprovado += p.saving_aprovado || 0;
+      cur.saving += Number(p.saving_previsto) || 0;
+      cur.aprovado += Number(p.saving_aprovado) || 0;
       m.set(k, cur);
     });
     return Array.from(m, ([lider, v]) => ({ lider, ...v })).sort(
@@ -196,8 +196,8 @@ export default function Dashboard() {
       const k = (p.gerente || "Sem gerente").trim();
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
-      cur.saving += p.saving_previsto || 0;
-      cur.aprovado += p.saving_aprovado || 0;
+      cur.saving += Number(p.saving_previsto) || 0;
+      cur.aprovado += Number(p.saving_aprovado) || 0;
       m.set(k, cur);
     });
     return Array.from(m, ([gerente, v]) => ({ gerente, ...v })).sort(
@@ -211,8 +211,8 @@ export default function Dashboard() {
       const k = p.setor || "Sem setor";
       const cur = m.get(k) || { qtd: 0, saving: 0, investimento: 0 };
       cur.qtd += 1;
-      cur.saving += p.saving_previsto || 0;
-      cur.investimento += p.investimento || 0;
+      cur.saving += Number(p.saving_previsto) || 0;
+      cur.investimento += Number(p.investimento) || 0;
       m.set(k, cur);
     });
     return Array.from(m, ([setor, v]) => ({ setor, ...v })).sort(
@@ -244,7 +244,7 @@ export default function Dashboard() {
         const k = key(p.dataUltimaFase);
         const cur = m.get(k) || { mes: k, iniciados: 0, concluidos: 0, saving: 0 };
         cur.concluidos += 1;
-        cur.saving += p.saving_aprovado || p.saving_previsto || 0;
+        cur.saving += Number(p.saving_aprovado) || Number(p.saving_previsto) || 0;
         m.set(k, cur);
       }
     });
@@ -266,7 +266,7 @@ export default function Dashboard() {
       pareto(
         projetos
           .filter((p) => (Number(p.saving_previsto) || 0) > 0)
-          .map((p) => ({ label: p.projeto, value: p.saving_previsto || 0 }))
+          .map((p) => ({ label: p.projeto, value: Number(p.saving_previsto) || 0 }))
       ).slice(0, 20),
     [projetos]
   );
@@ -287,7 +287,7 @@ export default function Dashboard() {
       pareto(
         projetos
           .filter((p) => (Number(p.investimento) || 0) > 0)
-          .map((p) => ({ label: p.projeto, value: p.investimento || 0 }))
+          .map((p) => ({ label: p.projeto, value: Number(p.investimento) || 0 }))
       ).slice(0, 20),
     [projetos]
   );
