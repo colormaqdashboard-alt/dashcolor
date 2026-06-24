@@ -850,7 +850,7 @@ function ParetoChart({
           <Tooltip
             contentStyle={tooltipStyle}
             formatter={(v: any, name: any) =>
-              name === "Acumulado %" ? `${v.toFixed(1)}%` : fmtMoney(v)
+              name === "Acumulado %" ? `${Number(v).toFixed(1)}%` : fmtMoney(Number(v))
             }
           />
           <Bar yAxisId="left" dataKey="value" name="Valor" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
