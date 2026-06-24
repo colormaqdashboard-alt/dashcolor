@@ -570,7 +570,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                     <YAxis type="category" dataKey="lider" stroke="var(--muted-foreground)" fontSize={11} width={130} />
-                    <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                     <Bar dataKey="saving" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ChartWrap>
@@ -581,7 +581,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                     <YAxis type="category" dataKey="gerente" stroke="var(--muted-foreground)" fontSize={11} width={130} />
-                    <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Bar dataKey="saving" name="Previsto" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
                     <Bar dataKey="aprovado" name="Aprovado" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
@@ -624,7 +624,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="gerente" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Bar dataKey="saving" name="Previsto" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="aprovado" name="Aprovado" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
@@ -639,7 +639,7 @@ export default function Dashboard() {
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                   </PieChart>
                 </ChartWrap>
@@ -651,7 +651,7 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="setor" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
                   <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                  <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                   <Bar dataKey="investimento" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartWrap>
@@ -680,7 +680,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => fmtMoney(v)} contentStyle={tooltipStyle} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
                     <Bar dataKey="saving" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
                   </ComposedChart>
                 </ChartWrap>
@@ -849,7 +849,7 @@ function ParetoChart({
           <YAxis yAxisId="right" orientation="right" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(v: number, name: string) =>
+            formatter={(v: any, name: any) =>
               name === "Acumulado %" ? `${v.toFixed(1)}%` : fmtMoney(v)
             }
           />
