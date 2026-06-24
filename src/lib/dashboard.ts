@@ -91,7 +91,7 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
   }
   const validado =
     p.status === "Validado pela controladoria" ||
-    (p.saving_aprovado != null && p.saving_aprovado > 0);
+    (p.saving_aprovado != null && Number(p.saving_aprovado) > 0);
   if (validado) {
     faseAtual = "Validado pela Controladoria";
     faseAtualPct = 1;
