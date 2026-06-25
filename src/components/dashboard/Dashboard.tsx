@@ -1046,6 +1046,13 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* RANKING DE PROJETOS */}
+          <TabsContent value="ranking" className="mt-4 space-y-4">
+            <RankingTable title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
+            <RankingTable title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
+            <RankingTable title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
+          </TabsContent>
+
           {/* ALERTAS */}
           <TabsContent value="alertas" className="mt-4 space-y-4">
             <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
