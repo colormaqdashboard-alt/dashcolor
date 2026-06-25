@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -47,7 +47,6 @@ import {
   RotateCcw,
   Target,
   TrendingUp,
-  Upload,
   Users,
 } from "lucide-react";
 import {
@@ -62,7 +61,6 @@ import {
   type EnrichedProjeto,
 } from "@/lib/dashboard";
 import {
-  loadFromExcelFile,
   loadFromGoogleSheets,
   type DashboardData,
 } from "@/lib/data-source";
@@ -94,17 +92,18 @@ export default function Dashboard() {
     label: string;
     detail: string;
     projetos: Projeto[];
+    metas: { gerente: string; meta: number }[];
     updatedAt: Date;
   }>(() => ({
     label: "Dados de exemplo (interno)",
     detail: `${RAW.projetos.length} projetos`,
     projetos: RAW.projetos as Projeto[],
+    metas: RAW.metas || [],
     updatedAt: new Date(),
   }));
   const [sheetUrl, setSheetUrl] = useState("");
   const [loadingSource, setLoadingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const all = useMemo(() => enrichProjetos(source.projetos), [source]);
 
@@ -112,7 +111,13 @@ export default function Dashboard() {
     if (!data.projetos.length) {
       throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos.'");
     }
-    setSource({ label, detail, projetos: data.projetos, updatedAt: new Date() });
+    setSource({
+      label,
+      detail,
+      projetos: data.projetos,
+      metas: data.metas || [],
+      updatedAt: new Date(),
+    });
   };
 
   const handleSyncSheet = async () => {
@@ -126,21 +131,6 @@ export default function Dashboard() {
       setSourceError(e?.message || "Erro ao sincronizar a planilha.");
     } finally {
       setLoadingSource(false);
-    }
-  };
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return;
-    setLoadingSource(true);
-    setSourceError(null);
-    try {
-      const data = await loadFromExcelFile(file);
-      applyData(data, `Arquivo: ${file.name}`, `${data.projetos.length} projetos importados`);
-    } catch (e: any) {
-      setSourceError(e?.message || "Erro ao ler o arquivo Excel.");
-    } finally {
-      setLoadingSource(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
