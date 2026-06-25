@@ -178,6 +178,29 @@ function buildMetas(rows: unknown[][]): { gerente: string; meta: number }[] {
 }
 
 function buildFases(rows: unknown[][]): { fase: string; pct: number; etapa: string }[] {
+  return buildFasesImpl(rows);
+}
+
+function buildMetasGerentes(rows: unknown[][]): { gerente: string; meta: number }[] {
+  if (!rows || rows.length < 1) return [];
+  // Aba "Metas gerentes": coluna A = nome do gerente, coluna B = meta.
+  // Detecta automaticamente se a primeira linha é cabeçalho.
+  const first = rows[0] || [];
+  const firstAIsHeader = !!toStr(first[0]) && toNumber(first[1]) == null;
+  const start = firstAIsHeader ? 1 : 0;
+  const map = new Map<string, number>();
+  for (let i = start; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const g = toStr(r[0]);
+    const m = toNumber(r[1]);
+    if (!g || m == null) continue;
+    const key = g.trim();
+    map.set(key, (map.get(key) || 0) + m);
+  }
+  return Array.from(map, ([gerente, meta]) => ({ gerente, meta }));
+}
+
+function buildFasesImpl(rows: unknown[][]): { fase: string; pct: number; etapa: string }[] {
   if (!rows || rows.length < 2) return [];
   const headers = (rows[0] || []).map((h) => norm(h));
   const faseIdx = headers.findIndex((h) => /fase/.test(h));
@@ -202,10 +225,11 @@ function sheetToRows(wb: XLSX.WorkBook, name: string): unknown[][] {
 
 function workbookToData(wb: XLSX.WorkBook): DashboardData {
   const equipeRows = sheetToRows(wb, "EQUIPE");
+  const metasRows = sheetToRows(wb, "Metas gerentes");
   return {
     projetos: buildProjetos(sheetToRows(wb, "Projetos")),
     equipe: buildEquipe(equipeRows),
-    metas: buildMetas(equipeRows),
+    metas: buildMetasGerentes(metasRows),
     fases: buildFases(sheetToRows(wb, "Funcionalidade")),
   };
 }
