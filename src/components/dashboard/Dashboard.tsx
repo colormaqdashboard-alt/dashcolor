@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -47,7 +47,6 @@ import {
   RotateCcw,
   Target,
   TrendingUp,
-  Upload,
   Users,
 } from "lucide-react";
 import {
@@ -62,7 +61,6 @@ import {
   type EnrichedProjeto,
 } from "@/lib/dashboard";
 import {
-  loadFromExcelFile,
   loadFromGoogleSheets,
   type DashboardData,
 } from "@/lib/data-source";
@@ -94,17 +92,18 @@ export default function Dashboard() {
     label: string;
     detail: string;
     projetos: Projeto[];
+    metas: { gerente: string; meta: number }[];
     updatedAt: Date;
   }>(() => ({
     label: "Dados de exemplo (interno)",
     detail: `${RAW.projetos.length} projetos`,
     projetos: RAW.projetos as Projeto[],
+    metas: RAW.metas || [],
     updatedAt: new Date(),
   }));
   const [sheetUrl, setSheetUrl] = useState("");
   const [loadingSource, setLoadingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const all = useMemo(() => enrichProjetos(source.projetos), [source]);
 
@@ -112,7 +111,13 @@ export default function Dashboard() {
     if (!data.projetos.length) {
       throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos.'");
     }
-    setSource({ label, detail, projetos: data.projetos, updatedAt: new Date() });
+    setSource({
+      label,
+      detail,
+      projetos: data.projetos,
+      metas: data.metas || [],
+      updatedAt: new Date(),
+    });
   };
 
   const handleSyncSheet = async () => {
@@ -126,21 +131,6 @@ export default function Dashboard() {
       setSourceError(e?.message || "Erro ao sincronizar a planilha.");
     } finally {
       setLoadingSource(false);
-    }
-  };
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return;
-    setLoadingSource(true);
-    setSourceError(null);
-    try {
-      const data = await loadFromExcelFile(file);
-      applyData(data, `Arquivo: ${file.name}`, `${data.projetos.length} projetos importados`);
-    } catch (e: any) {
-      setSourceError(e?.message || "Erro ao ler o arquivo Excel.");
-    } finally {
-      setLoadingSource(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -278,6 +268,32 @@ export default function Dashboard() {
       (a, b) => b.saving - a.saving
     );
   }, [projetos]);
+
+  // Meta por Gerente — realizado = soma de Projetos!Q (saving_aprovado),
+  // meta = EQUIPE!F. Sem limite de valor.
+  const metaPorGerente = useMemo(() => {
+    const realizadoMap = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.gerente || "").trim();
+      if (!k) return;
+      realizadoMap.set(k, (realizadoMap.get(k) || 0) + (Number(p.saving_aprovado) || 0));
+    });
+    const metaMap = new Map<string, number>();
+    (source.metas || []).forEach((m) => {
+      const k = (m.gerente || "").trim();
+      if (!k) return;
+      metaMap.set(k, (metaMap.get(k) || 0) + (Number(m.meta) || 0));
+    });
+    const all = new Set<string>([...realizadoMap.keys(), ...metaMap.keys()]);
+    return Array.from(all).map((gerente) => {
+      const realizado = realizadoMap.get(gerente) || 0;
+      const meta = metaMap.get(gerente) || 0;
+      const faltante = meta - realizado;
+      const pctAtingido = meta > 0 ? realizado / meta : null;
+      const pctFaltante = pctAtingido == null ? null : 1 - pctAtingido;
+      return { gerente, realizado, meta, faltante, pctAtingido, pctFaltante };
+    }).sort((a, b) => b.realizado - a.realizado);
+  }, [projetos, source.metas]);
 
   const porSetor = useMemo(() => {
     const m = new Map<string, { qtd: number; saving: number; investimento: number }>();
@@ -419,9 +435,9 @@ export default function Dashboard() {
         {/* Data Source */}
         <SectionCard
           title="Fonte de Dados"
-          description="Cole o link de uma planilha pública do Google Sheets ou envie um arquivo Excel"
+          description="Cole o link de uma planilha pública do Google Sheets (somente leitura)"
         >
-          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">
                 Link público do Google Sheets (somente leitura)
@@ -442,26 +458,6 @@ export default function Dashboard() {
               <Button onClick={handleSyncSheet} disabled={loadingSource || !sheetUrl.trim()}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${loadingSource ? "animate-spin" : ""}`} />
                 Sincronizar
-              </Button>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">
-                Ou enviar Excel
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.xlsm,.xlsb,.csv"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0] || null)}
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loadingSource}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload manual
               </Button>
             </div>
           </div>
@@ -581,6 +577,87 @@ export default function Dashboard() {
           <Kpi tone="danger" label="Atrasados" value={prazo.atrasados} icon={<AlertTriangle className="h-5 w-5" />} />
           <Kpi tone="warning" label="Sem Prazo Definido" value={prazo.semPrazo} />
         </div>
+
+        <SectionCard
+          title="Meta por Gerente"
+          description="Realizado (Projetos!Q) vs Meta (EQUIPE!F) — valores sem limite de magnitude"
+        >
+          {metaPorGerente.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhuma meta carregada. Verifique a aba <b>EQUIPE</b> (coluna E = gerente, coluna F = meta).
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {metaPorGerente.map((g) => {
+                const pct = g.pctAtingido;
+                const tone =
+                  pct == null ? "muted"
+                    : pct >= 1 ? "success"
+                    : pct >= 0.8 ? "warning"
+                    : "danger";
+                const dot =
+                  tone === "success" ? "bg-success"
+                    : tone === "warning" ? "bg-warning"
+                    : tone === "danger" ? "bg-destructive"
+                    : "bg-muted-foreground";
+                const barColor =
+                  tone === "success" ? "var(--success, #16a34a)"
+                    : tone === "warning" ? "var(--warning, #f59e0b)"
+                    : tone === "danger" ? "var(--destructive, #dc2626)"
+                    : "var(--muted-foreground)";
+                const pctClamped = pct == null ? 0 : Math.min(1, Math.max(0, pct));
+                return (
+                  <div key={g.gerente} className="rounded-lg border bg-card p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
+                          <span className="truncate text-sm font-semibold">{g.gerente}</span>
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          Meta {fmtMoney(g.meta)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Atingido</div>
+                        <div className="text-lg font-bold tabular-nums">
+                          {pct == null ? "—" : fmtPct(pct)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pctClamped * 100}%`, backgroundColor: barColor }}
+                      />
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <div className="text-muted-foreground">Realizado</div>
+                        <div className="font-semibold tabular-nums">{fmtMoney(g.realizado)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-muted-foreground">
+                          {g.faltante > 0 ? "Faltante" : "Excedente"}
+                        </div>
+                        <div
+                          className={`font-semibold tabular-nums ${g.faltante > 0 ? "text-destructive" : "text-success"}`}
+                        >
+                          {fmtMoney(Math.abs(g.faltante))}
+                          {g.pctFaltante != null ? (
+                            <span className="ml-1 text-muted-foreground">
+                              ({fmtPct(Math.abs(g.pctFaltante))})
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
 
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
