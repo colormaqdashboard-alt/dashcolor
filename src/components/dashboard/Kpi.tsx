@@ -8,6 +8,7 @@ type Props = {
   sub?: ReactNode;
   tone?: "default" | "success" | "warning" | "danger" | "info" | "primary";
   icon?: ReactNode;
+  className?: string;
 };
 
 const toneMap: Record<NonNullable<Props["tone"]>, string> = {
@@ -20,12 +21,13 @@ const toneMap: Record<NonNullable<Props["tone"]>, string> = {
     "text-primary-foreground border-transparent [background-image:var(--gradient-hero)]",
 };
 
-export function Kpi({ label, value, sub, tone = "default", icon }: Props) {
+export function Kpi({ label, value, sub, tone = "default", icon, className }: Props) {
   return (
     <Card
       className={cn(
         "border shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-elev)]",
-        toneMap[tone]
+        toneMap[tone],
+        className
       )}
     >
       <CardContent className="p-4 sm:p-5">
