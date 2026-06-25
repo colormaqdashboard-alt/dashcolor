@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -41,20 +41,30 @@ import {
   Clock,
   DollarSign,
   Filter,
+  FileSpreadsheet,
+  Link2,
+  RefreshCw,
   RotateCcw,
   Target,
   TrendingUp,
-  Users,
+  Upload,
 } from "lucide-react";
 import {
-  enrichAll,
+  enrichProjetos,
+  RAW,
   fmtDate,
   fmtMoney,
   fmtPct,
   pareto,
   uniq,
+  type Projeto,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
+import {
+  loadFromExcelFile,
+  loadFromGoogleSheets,
+  type DashboardData,
+} from "@/lib/data-source";
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
 
@@ -79,7 +89,70 @@ function statusBadge(p: EnrichedProjeto) {
 }
 
 export default function Dashboard() {
-  const all = useMemo(() => enrichAll(), []);
+  const [source, setSource] = useState<{
+    label: string;
+    detail: string;
+    projetos: Projeto[];
+    updatedAt: Date;
+  }>(() => ({
+    label: "Dados de exemplo (interno)",
+    detail: `${RAW.projetos.length} projetos`,
+    projetos: RAW.projetos as Projeto[],
+    updatedAt: new Date(),
+  }));
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [loadingSource, setLoadingSource] = useState(false);
+  const [sourceError, setSourceError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const all = useMemo(() => enrichProjetos(source.projetos), [source]);
+
+  const applyData = (data: DashboardData, label: string, detail: string) => {
+    if (!data.projetos.length) {
+      throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos.'");
+    }
+    setSource({ label, detail, projetos: data.projetos, updatedAt: new Date() });
+  };
+
+  const handleSyncSheet = async () => {
+    if (!sheetUrl.trim()) return;
+    setLoadingSource(true);
+    setSourceError(null);
+    try {
+      const data = await loadFromGoogleSheets(sheetUrl.trim());
+      applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`);
+    } catch (e: any) {
+      setSourceError(e?.message || "Erro ao sincronizar a planilha.");
+    } finally {
+      setLoadingSource(false);
+    }
+  };
+
+  const handleFile = async (file: File | null) => {
+    if (!file) return;
+    setLoadingSource(true);
+    setSourceError(null);
+    try {
+      const data = await loadFromExcelFile(file);
+      applyData(data, `Arquivo: ${file.name}`, `${data.projetos.length} projetos importados`);
+    } catch (e: any) {
+      setSourceError(e?.message || "Erro ao ler o arquivo Excel.");
+    } finally {
+      setLoadingSource(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // Auto-resync Google Sheets every 5 minutes when a URL is set
+  useEffect(() => {
+    if (source.label !== "Google Sheets" || !sheetUrl.trim()) return;
+    const id = setInterval(() => {
+      loadFromGoogleSheets(sheetUrl.trim())
+        .then((data) => applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`))
+        .catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [source.label, sheetUrl]);
 
   const [fStatus, setFStatus] = useState(ALL);
   const [fFase, setFFase] = useState(ALL);
