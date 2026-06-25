@@ -416,6 +416,77 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6">
+        {/* Data Source */}
+        <SectionCard
+          title="Fonte de Dados"
+          description="Cole o link de uma planilha pública do Google Sheets ou envie um arquivo Excel"
+        >
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                Link público do Google Sheets (somente leitura)
+              </label>
+              <div className="relative">
+                <Link2 className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="pl-8"
+                  placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+                  value={sheetUrl}
+                  onChange={(e) => setSheetUrl(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSyncSheet(); }}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">&nbsp;</label>
+              <Button onClick={handleSyncSheet} disabled={loadingSource || !sheetUrl.trim()}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${loadingSource ? "animate-spin" : ""}`} />
+                Sincronizar
+              </Button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                Ou enviar Excel
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.xlsm,.xlsb,.csv"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0] || null)}
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loadingSource}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload manual
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span className="font-medium text-foreground">{source.label}</span>
+            <span>·</span>
+            <span>{source.detail}</span>
+            <span>·</span>
+            <span>Atualizado: {source.updatedAt.toLocaleString("pt-BR")}</span>
+            {source.label === "Google Sheets" ? (
+              <Badge variant="secondary" className="ml-1">Sincronização automática a cada 5 min</Badge>
+            ) : null}
+          </div>
+          {sourceError ? (
+            <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {sourceError}
+            </div>
+          ) : null}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Como publicar: no Google Sheets, vá em <b>Compartilhar → Geral → Qualquer pessoa com o link (Leitor)</b>.
+            O painel lê as abas <b>Projetos.</b>, <b>EQUIPE</b> e <b>Funcionalidade</b>; demais abas são ignoradas.
+          </p>
+        </SectionCard>
+
         {/* Filters */}
         <SectionCard
           title="Filtros"
