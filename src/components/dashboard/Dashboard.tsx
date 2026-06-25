@@ -1246,3 +1246,67 @@ function AlertList({
     </SectionCard>
   );
 }
+
+function RankingTable({
+  title,
+  rows,
+  metricKey,
+  metricLabel,
+}: {
+  title: string;
+  rows: EnrichedProjeto[];
+  metricKey: "saving_previsto" | "savingAprovadoEfetivo" | "investimento";
+  metricLabel: string;
+}) {
+  return (
+    <SectionCard title={title} description={`${rows.length} projeto(s)`}>
+      <div className="overflow-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10 text-right">#</TableHead>
+              <TableHead>Projeto (Col B)</TableHead>
+              <TableHead>Líder (Col L)</TableHead>
+              <TableHead>Gerente (Col M)</TableHead>
+              <TableHead>Fase (Col N)</TableHead>
+              <TableHead>Status (Col W)</TableHead>
+              <TableHead className="text-right">Saving Previsto (P)</TableHead>
+              <TableHead className="text-right">Saving Aprovado (Q)</TableHead>
+              <TableHead className="text-right">Investimento (R)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((p, i) => {
+              const highlight = metricKey;
+              return (
+                <TableRow key={p.matricula}>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="max-w-[320px]">
+                    <div className="truncate font-medium">{p.projeto}</div>
+                    <div className="text-xs text-muted-foreground">#{p.matricula}</div>
+                  </TableCell>
+                  <TableCell className="text-sm">{p.lider || "—"}</TableCell>
+                  <TableCell className="text-sm">{p.gerente || "—"}</TableCell>
+                  <TableCell className="text-xs">{p.faseAtual}</TableCell>
+                  <TableCell className="text-sm">{p.status || "—"}</TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "saving_previsto" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.saving_previsto)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "savingAprovadoEfetivo" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.savingAprovadoEfetivo)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "investimento" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.investimento)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Ordenado por <b>{metricLabel}</b>. Saving Aprovado considera apenas projetos com status "Validado pela controladoria".
+      </p>
+    </SectionCard>
+  );
+}
