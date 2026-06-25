@@ -137,6 +137,10 @@ export function enrichAll(): EnrichedProjeto[] {
   return RAW.projetos.map((p) => enrich(p));
 }
 
+export function enrichProjetos(projetos: Projeto[]): EnrichedProjeto[] {
+  return projetos.map((p) => enrich(p));
+}
+
 export function uniq<T>(arr: (T | null | undefined)[]): T[] {
   return Array.from(new Set(arr.filter((x): x is T => x != null && x !== "")));
 }
