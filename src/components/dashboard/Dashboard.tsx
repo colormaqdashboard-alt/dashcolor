@@ -269,6 +269,32 @@ export default function Dashboard() {
     );
   }, [projetos]);
 
+  // Meta por Gerente — realizado = soma de Projetos!Q (saving_aprovado),
+  // meta = EQUIPE!F. Sem limite de valor.
+  const metaPorGerente = useMemo(() => {
+    const realizadoMap = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.gerente || "").trim();
+      if (!k) return;
+      realizadoMap.set(k, (realizadoMap.get(k) || 0) + (Number(p.saving_aprovado) || 0));
+    });
+    const metaMap = new Map<string, number>();
+    (source.metas || []).forEach((m) => {
+      const k = (m.gerente || "").trim();
+      if (!k) return;
+      metaMap.set(k, (metaMap.get(k) || 0) + (Number(m.meta) || 0));
+    });
+    const all = new Set<string>([...realizadoMap.keys(), ...metaMap.keys()]);
+    return Array.from(all).map((gerente) => {
+      const realizado = realizadoMap.get(gerente) || 0;
+      const meta = metaMap.get(gerente) || 0;
+      const faltante = meta - realizado;
+      const pctAtingido = meta > 0 ? realizado / meta : null;
+      const pctFaltante = pctAtingido == null ? null : 1 - pctAtingido;
+      return { gerente, realizado, meta, faltante, pctAtingido, pctFaltante };
+    }).sort((a, b) => b.realizado - a.realizado);
+  }, [projetos, source.metas]);
+
   const porSetor = useMemo(() => {
     const m = new Map<string, { qtd: number; saving: number; investimento: number }>();
     projetos.forEach((p) => {
