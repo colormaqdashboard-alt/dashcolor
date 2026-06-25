@@ -179,13 +179,14 @@ export default function Dashboard() {
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
     const savingPrev = projetos.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0);
-    const savingAprov = projetos.reduce((s, p) => s + (Number(p.saving_aprovado) || 0), 0);
+    // Saving aprovado: SOMENTE projetos com status "Validado pela controladoria" (coluna W).
+    const savingAprov = projetos.reduce((s, p) => s + p.savingAprovadoEfetivo, 0);
     const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
     const pctMedio =
       projetos.length === 0
         ? 0
         : projetos.reduce((s, p) => s + p.pctConclusao, 0) / projetos.length;
-    const roi = investimento > 0 ? savingPrev / investimento : null;
+    const roi = investimento > 0 ? savingAprov / investimento : null;
     return {
       total: projetos.length,
       validados: validados.length,
@@ -236,7 +237,7 @@ export default function Dashboard() {
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
       cur.saving += Number(p.saving_previsto) || 0;
-      cur.aprovado += Number(p.saving_aprovado) || 0;
+      cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
     return Array.from(m, ([lider, v]) => ({ lider, ...v })).sort(
@@ -251,7 +252,7 @@ export default function Dashboard() {
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
       cur.saving += Number(p.saving_previsto) || 0;
-      cur.aprovado += Number(p.saving_aprovado) || 0;
+      cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
     return Array.from(m, ([gerente, v]) => ({ gerente, ...v })).sort(
@@ -266,7 +267,7 @@ export default function Dashboard() {
     projetos.forEach((p) => {
       const k = (p.gerente || "").trim();
       if (!k) return;
-      realizadoMap.set(k, (realizadoMap.get(k) || 0) + (Number(p.saving_aprovado) || 0));
+      realizadoMap.set(k, (realizadoMap.get(k) || 0) + p.savingAprovadoEfetivo);
     });
     const metaMap = new Map<string, number>();
     (source.metas || []).forEach((m) => {
@@ -324,7 +325,7 @@ export default function Dashboard() {
         const k = key(p.dataUltimaFase);
         const cur = m.get(k) || { mes: k, iniciados: 0, concluidos: 0, saving: 0 };
         cur.concluidos += 1;
-        cur.saving += Number(p.saving_aprovado) || Number(p.saving_previsto) || 0;
+        cur.saving += p.savingAprovadoEfetivo;
         m.set(k, cur);
       }
     });
