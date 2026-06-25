@@ -409,9 +409,9 @@ export default function Dashboard() {
         {/* Data Source */}
         <SectionCard
           title="Fonte de Dados"
-          description="Cole o link de uma planilha pública do Google Sheets ou envie um arquivo Excel"
+          description="Cole o link de uma planilha pública do Google Sheets (somente leitura)"
         >
-          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">
                 Link público do Google Sheets (somente leitura)
@@ -432,26 +432,6 @@ export default function Dashboard() {
               <Button onClick={handleSyncSheet} disabled={loadingSource || !sheetUrl.trim()}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${loadingSource ? "animate-spin" : ""}`} />
                 Sincronizar
-              </Button>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">
-                Ou enviar Excel
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.xlsm,.xlsb,.csv"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0] || null)}
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loadingSource}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload manual
               </Button>
             </div>
           </div>
