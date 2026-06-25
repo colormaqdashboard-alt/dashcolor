@@ -919,6 +919,73 @@ export default function Dashboard() {
                 </BarChart>
               </ChartWrap>
             </SectionCard>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <Kpi tone="info" label="Total de Investimento" value={fmtMoney(totals.investimento)} sub="Coluna R tratada (alfanumérica)" icon={<DollarSign className="h-5 w-5" />} />
+              <Kpi tone="success" label="Saving Aprovado (validados)" value={fmtMoney(totals.savingAprov)} sub="Somente status = Validado pela controladoria" />
+              <Kpi label="ROI Estimado" value={totals.roi == null ? "—" : `${totals.roi.toFixed(2)}x`} sub="Aprovado ÷ Investimento" />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SectionCard title="Investimento por Status (coluna W)">
+                <ChartWrap>
+                  <BarChart data={investPorStatus} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={180} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-4)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Fase">
+                <ChartWrap>
+                  <BarChart data={investPorFase} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={220} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Gerente">
+                <ChartWrap>
+                  <BarChart data={investPorGerente} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={150} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Líder">
+                <ChartWrap>
+                  <BarChart data={investPorLider.slice(0, 15)} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={150} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Saving Aprovado x Investimento por Gerente" description="Comparativo financeiro — somente saving de projetos validados">
+              <ChartWrap>
+                <BarChart data={porGerente.map((g) => ({ gerente: g.gerente, aprovado: g.aprovado, investimento: investPorGerente.find((x) => x.name === g.gerente)?.value || 0 }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="gerente" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="aprovado" name="Saving Aprovado" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="investimento" name="Investimento" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartWrap>
+            </SectionCard>
           </TabsContent>
 
           {/* PERFORMANCE */}
