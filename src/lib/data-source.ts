@@ -202,10 +202,11 @@ function sheetToRows(wb: XLSX.WorkBook, name: string): unknown[][] {
 
 function workbookToData(wb: XLSX.WorkBook): DashboardData {
   const equipeRows = sheetToRows(wb, "EQUIPE");
+  const metasRows = sheetToRows(wb, "Metas gerentes");
   return {
     projetos: buildProjetos(sheetToRows(wb, "Projetos")),
     equipe: buildEquipe(equipeRows),
-    metas: buildMetas(equipeRows),
+    metas: buildMetasGerentes(metasRows),
     fases: buildFases(sheetToRows(wb, "Funcionalidade")),
   };
 }
