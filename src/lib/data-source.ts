@@ -156,6 +156,27 @@ function buildEquipe(rows: unknown[][]): { lider: string; gerente: string }[] {
     .filter((x) => x.lider && x.gerente);
 }
 
+function buildMetas(rows: unknown[][]): { gerente: string; meta: number }[] {
+  if (!rows || rows.length < 2) return [];
+  const headers = (rows[0] || []).map((h) => norm(h));
+  // Spec: EQUIPE col E = gerente, col F = meta. Fall back to header-based detection.
+  let gerenteIdx = 4;
+  let metaIdx = 5;
+  const gByHeader = headers.findIndex((h) => /gerente/.test(h));
+  const mByHeader = headers.findIndex((h) => /\bmeta\b/.test(h));
+  if (gByHeader >= 0) gerenteIdx = gByHeader;
+  if (mByHeader >= 0) metaIdx = mByHeader;
+  const map = new Map<string, number>();
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const g = toStr(r[gerenteIdx]);
+    const m = toNumber(r[metaIdx]);
+    if (!g || m == null) continue;
+    map.set(g.trim(), (map.get(g.trim()) || 0) + m);
+  }
+  return Array.from(map, ([gerente, meta]) => ({ gerente, meta }));
+}
+
 function buildFases(rows: unknown[][]): { fase: string; pct: number; etapa: string }[] {
   if (!rows || rows.length < 2) return [];
   const headers = (rows[0] || []).map((h) => norm(h));
@@ -180,10 +201,11 @@ function sheetToRows(wb: XLSX.WorkBook, name: string): unknown[][] {
 }
 
 function workbookToData(wb: XLSX.WorkBook): DashboardData {
+  const equipeRows = sheetToRows(wb, "EQUIPE");
   return {
     projetos: buildProjetos(sheetToRows(wb, "Projetos")),
-    equipe: buildEquipe(sheetToRows(wb, "EQUIPE")),
-    metas: [],
+    equipe: buildEquipe(equipeRows),
+    metas: buildMetas(equipeRows),
     fases: buildFases(sheetToRows(wb, "Funcionalidade")),
   };
 }
@@ -220,7 +242,7 @@ export async function loadFromGoogleSheets(url: string): Promise<DashboardData> 
   return {
     projetos: buildProjetos(projetosRows),
     equipe: buildEquipe(equipeRows),
-    metas: [],
+    metas: buildMetas(equipeRows),
     fases: buildFases(funcRows),
   };
 }
