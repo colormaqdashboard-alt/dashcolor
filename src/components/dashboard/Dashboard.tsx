@@ -578,6 +578,87 @@ export default function Dashboard() {
           <Kpi tone="warning" label="Sem Prazo Definido" value={prazo.semPrazo} />
         </div>
 
+        <SectionCard
+          title="Meta por Gerente"
+          description="Realizado (Projetos!Q) vs Meta (EQUIPE!F) — valores sem limite de magnitude"
+        >
+          {metaPorGerente.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhuma meta carregada. Verifique a aba <b>EQUIPE</b> (coluna E = gerente, coluna F = meta).
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {metaPorGerente.map((g) => {
+                const pct = g.pctAtingido;
+                const tone =
+                  pct == null ? "muted"
+                    : pct >= 1 ? "success"
+                    : pct >= 0.8 ? "warning"
+                    : "danger";
+                const dot =
+                  tone === "success" ? "bg-success"
+                    : tone === "warning" ? "bg-warning"
+                    : tone === "danger" ? "bg-destructive"
+                    : "bg-muted-foreground";
+                const barColor =
+                  tone === "success" ? "var(--success, #16a34a)"
+                    : tone === "warning" ? "var(--warning, #f59e0b)"
+                    : tone === "danger" ? "var(--destructive, #dc2626)"
+                    : "var(--muted-foreground)";
+                const pctClamped = pct == null ? 0 : Math.min(1, Math.max(0, pct));
+                return (
+                  <div key={g.gerente} className="rounded-lg border bg-card p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
+                          <span className="truncate text-sm font-semibold">{g.gerente}</span>
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          Meta {fmtMoney(g.meta)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Atingido</div>
+                        <div className="text-lg font-bold tabular-nums">
+                          {pct == null ? "—" : fmtPct(pct)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pctClamped * 100}%`, backgroundColor: barColor }}
+                      />
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <div className="text-muted-foreground">Realizado</div>
+                        <div className="font-semibold tabular-nums">{fmtMoney(g.realizado)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-muted-foreground">
+                          {g.faltante > 0 ? "Faltante" : "Excedente"}
+                        </div>
+                        <div
+                          className={`font-semibold tabular-nums ${g.faltante > 0 ? "text-destructive" : "text-success"}`}
+                        >
+                          {fmtMoney(Math.abs(g.faltante))}
+                          {g.pctFaltante != null ? (
+                            <span className="ml-1 text-muted-foreground">
+                              ({fmtPct(Math.abs(g.pctFaltante))})
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
+
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
