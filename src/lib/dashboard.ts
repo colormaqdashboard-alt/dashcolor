@@ -58,6 +58,7 @@ export type EnrichedProjeto = Projeto & {
   semPrazo: boolean;
   parado: boolean;
   pctConclusao: number;
+  savingAprovadoEfetivo: number;
 };
 
 const parseDate = (v: string | null): Date | null => {
@@ -89,9 +90,10 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
       dataUltimaFase = d;
     }
   }
+  // REGRA OFICIAL: status vem exclusivamente da coluna W. Validado SOMENTE
+  // quando o texto for exatamente "Validado pela controladoria".
   const validado =
-    p.status === "Validado pela controladoria" ||
-    (p.saving_aprovado != null && Number(p.saving_aprovado) > 0);
+    (p.status || "").trim().toLowerCase() === "validado pela controladoria";
   if (validado) {
     faseAtual = "Validado pela Controladoria";
     faseAtualPct = 1;
@@ -130,6 +132,8 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     semPrazo,
     parado,
     pctConclusao: faseAtualPct,
+    // Saving aprovado só conta quando validado pela controladoria.
+    savingAprovadoEfetivo: validado ? Number(p.saving_aprovado) || 0 : 0,
   };
 }
 
