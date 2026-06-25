@@ -530,6 +530,7 @@ export default function Dashboard() {
             value={totals.validados}
             sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
             icon={<CheckCircle2 className="h-5 w-5" />}
+            className="text-black [&_*]:text-black"
           />
           <Kpi
             label="Conclusão Média"
@@ -563,6 +564,7 @@ export default function Dashboard() {
             tone="success"
             label="No Prazo"
             value={prazo.noPrazo}
+            className="text-black [&_*]:text-black"
           />
           <Kpi tone="danger" label="Atrasados" value={prazo.atrasados} icon={<AlertTriangle className="h-5 w-5" />} />
           <Kpi tone="warning" label="Sem Prazo Definido" value={prazo.semPrazo} />
