@@ -74,6 +74,20 @@ function toNumber(v: unknown): number | null {
   return isFinite(n) ? n : null;
 }
 
+// Coluna R — Investimento é alfanumérica. Removemos qualquer letra ou
+// símbolo e mantemos apenas dígitos, vírgulas, pontos e sinal. Valores
+// inválidos viram 0. SEM teto de magnitude.
+function toInvestimento(v: unknown): number {
+  if (v == null || v === "") return 0;
+  if (typeof v === "number") return isFinite(v) ? v : 0;
+  let s = String(v).replace(/[^\d,.\-]/g, "");
+  if (!s || s === "-" || s === "." || s === ",") return 0;
+  if (/,/.test(s) && /\./.test(s)) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/,/.test(s)) s = s.replace(",", ".");
+  const n = Number(s);
+  return isFinite(n) ? n : 0;
+}
+
 function toDateISO(v: unknown): string | null {
   if (v == null || v === "") return null;
   if (v instanceof Date) return isNaN(v.getTime()) ? null : v.toISOString();
@@ -106,7 +120,7 @@ const DATE_FIELDS = new Set<keyof Projeto>([
   "fase4", "fase5", "prazo_acao", "ultima_atualizacao",
 ]);
 const NUMBER_FIELDS = new Set<keyof Projeto>([
-  "matricula", "desperdicio", "saving_previsto", "saving_aprovado", "investimento",
+  "matricula", "desperdicio", "saving_previsto", "saving_aprovado",
 ]);
 
 function buildProjetos(rows: unknown[][]): Projeto[] {
@@ -134,7 +148,8 @@ function buildProjetos(rows: unknown[][]): Projeto[] {
       const idx = map[m.key];
       if (idx == null) continue;
       const v = row[idx];
-      if (NUMBER_FIELDS.has(m.key)) (p as any)[m.key] = toNumber(v);
+      if (m.key === "investimento") (p as any).investimento = toInvestimento(v);
+      else if (NUMBER_FIELDS.has(m.key)) (p as any)[m.key] = toNumber(v);
       else if (DATE_FIELDS.has(m.key)) (p as any)[m.key] = toDateISO(v);
       else (p as any)[m.key] = toStr(v);
     }

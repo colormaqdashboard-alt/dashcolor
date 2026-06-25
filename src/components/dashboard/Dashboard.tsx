@@ -179,13 +179,14 @@ export default function Dashboard() {
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
     const savingPrev = projetos.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0);
-    const savingAprov = projetos.reduce((s, p) => s + (Number(p.saving_aprovado) || 0), 0);
+    // Saving aprovado: SOMENTE projetos com status "Validado pela controladoria" (coluna W).
+    const savingAprov = projetos.reduce((s, p) => s + p.savingAprovadoEfetivo, 0);
     const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
     const pctMedio =
       projetos.length === 0
         ? 0
         : projetos.reduce((s, p) => s + p.pctConclusao, 0) / projetos.length;
-    const roi = investimento > 0 ? savingPrev / investimento : null;
+    const roi = investimento > 0 ? savingAprov / investimento : null;
     return {
       total: projetos.length,
       validados: validados.length,
@@ -236,7 +237,7 @@ export default function Dashboard() {
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
       cur.saving += Number(p.saving_previsto) || 0;
-      cur.aprovado += Number(p.saving_aprovado) || 0;
+      cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
     return Array.from(m, ([lider, v]) => ({ lider, ...v })).sort(
@@ -251,7 +252,7 @@ export default function Dashboard() {
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
       cur.saving += Number(p.saving_previsto) || 0;
-      cur.aprovado += Number(p.saving_aprovado) || 0;
+      cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
     return Array.from(m, ([gerente, v]) => ({ gerente, ...v })).sort(
@@ -266,7 +267,7 @@ export default function Dashboard() {
     projetos.forEach((p) => {
       const k = (p.gerente || "").trim();
       if (!k) return;
-      realizadoMap.set(k, (realizadoMap.get(k) || 0) + (Number(p.saving_aprovado) || 0));
+      realizadoMap.set(k, (realizadoMap.get(k) || 0) + p.savingAprovadoEfetivo);
     });
     const metaMap = new Map<string, number>();
     (source.metas || []).forEach((m) => {
@@ -309,6 +310,53 @@ export default function Dashboard() {
     return Array.from(m, ([name, value]) => ({ name, value }));
   }, [projetos]);
 
+  // ---- Investimento agregado (coluna R já tratada) ----
+  const investPorStatus = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.status || "Sem status").trim() || "Sem status";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorGerente = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.gerente || "Sem gerente").trim() || "Sem gerente";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorLider = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.lider || "Sem líder").trim() || "Sem líder";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorFase = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+
+  // ---- Rankings de Projetos ----
+  const rankSavingPrev = useMemo(
+    () => projetos.slice().sort((a, b) => (Number(b.saving_previsto) || 0) - (Number(a.saving_previsto) || 0)).slice(0, 20),
+    [projetos],
+  );
+  const rankSavingAprov = useMemo(
+    () => projetos.slice().filter((p) => p.savingAprovadoEfetivo > 0).sort((a, b) => b.savingAprovadoEfetivo - a.savingAprovadoEfetivo).slice(0, 20),
+    [projetos],
+  );
+  const rankInvest = useMemo(
+    () => projetos.slice().sort((a, b) => (Number(b.investimento) || 0) - (Number(a.investimento) || 0)).slice(0, 20),
+    [projetos],
+  );
+
   const evolucao = useMemo(() => {
     const m = new Map<string, { mes: string; iniciados: number; concluidos: number; saving: number }>();
     const key = (d: Date) =>
@@ -324,7 +372,7 @@ export default function Dashboard() {
         const k = key(p.dataUltimaFase);
         const cur = m.get(k) || { mes: k, iniciados: 0, concluidos: 0, saving: 0 };
         cur.concluidos += 1;
-        cur.saving += Number(p.saving_aprovado) || Number(p.saving_previsto) || 0;
+        cur.saving += p.savingAprovadoEfetivo;
         m.set(k, cur);
       }
     });
@@ -540,8 +588,8 @@ export default function Dashboard() {
           />
           <Kpi
             label="Saving Previsto (12m)"
-            value={fmtMoney(totals.savingPrev)}
-            sub={`Aprovado: ${fmtMoney(totals.savingAprov)}`}
+            value={fmtMoney(totals.savingAprov)}
+            sub={`Apenas projetos "Validado pela controladoria" · Previsto bruto: ${fmtMoney(totals.savingPrev)}`}
             icon={<DollarSign className="h-5 w-5" />}
           />
           <Kpi
@@ -658,6 +706,7 @@ export default function Dashboard() {
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="pareto">Pareto 80/20</TabsTrigger>
+            <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="alertas">
               Alertas
               {Object.values(alertas).reduce((s, a) => s + a.length, 0) > 0 ? (
@@ -870,6 +919,73 @@ export default function Dashboard() {
                 </BarChart>
               </ChartWrap>
             </SectionCard>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <Kpi tone="info" label="Total de Investimento" value={fmtMoney(totals.investimento)} sub="Coluna R tratada (alfanumérica)" icon={<DollarSign className="h-5 w-5" />} />
+              <Kpi tone="success" label="Saving Aprovado (validados)" value={fmtMoney(totals.savingAprov)} sub="Somente status = Validado pela controladoria" />
+              <Kpi label="ROI Estimado" value={totals.roi == null ? "—" : `${totals.roi.toFixed(2)}x`} sub="Aprovado ÷ Investimento" />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SectionCard title="Investimento por Status (coluna W)">
+                <ChartWrap>
+                  <BarChart data={investPorStatus} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={180} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-4)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Fase">
+                <ChartWrap>
+                  <BarChart data={investPorFase} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={220} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Gerente">
+                <ChartWrap>
+                  <BarChart data={investPorGerente} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={150} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard title="Investimento por Líder">
+                <ChartWrap>
+                  <BarChart data={investPorLider.slice(0, 15)} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={150} />
+                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Bar dataKey="value" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Saving Aprovado x Investimento por Gerente" description="Comparativo financeiro — somente saving de projetos validados">
+              <ChartWrap>
+                <BarChart data={porGerente.map((g) => ({ gerente: g.gerente, aprovado: g.aprovado, investimento: investPorGerente.find((x) => x.name === g.gerente)?.value || 0 }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="gerente" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="aprovado" name="Saving Aprovado" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="investimento" name="Investimento" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartWrap>
+            </SectionCard>
           </TabsContent>
 
           {/* PERFORMANCE */}
@@ -928,6 +1044,13 @@ export default function Dashboard() {
               <ParetoChart title="Pareto — Saving por Gerente" data={paretoGerente} />
               <ParetoChart title="Pareto — Investimento por Projeto (Top 20)" data={paretoInvest} className="lg:col-span-2" />
             </div>
+          </TabsContent>
+
+          {/* RANKING DE PROJETOS */}
+          <TabsContent value="ranking" className="mt-4 space-y-4">
+            <RankingTable title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
+            <RankingTable title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
+            <RankingTable title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
           </TabsContent>
 
           {/* ALERTAS */}
@@ -1120,6 +1243,70 @@ function AlertList({
           </li>
         ) : null}
       </ul>
+    </SectionCard>
+  );
+}
+
+function RankingTable({
+  title,
+  rows,
+  metricKey,
+  metricLabel,
+}: {
+  title: string;
+  rows: EnrichedProjeto[];
+  metricKey: "saving_previsto" | "savingAprovadoEfetivo" | "investimento";
+  metricLabel: string;
+}) {
+  return (
+    <SectionCard title={title} description={`${rows.length} projeto(s)`}>
+      <div className="overflow-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10 text-right">#</TableHead>
+              <TableHead>Projeto (Col B)</TableHead>
+              <TableHead>Líder (Col L)</TableHead>
+              <TableHead>Gerente (Col M)</TableHead>
+              <TableHead>Fase (Col N)</TableHead>
+              <TableHead>Status (Col W)</TableHead>
+              <TableHead className="text-right">Saving Previsto (P)</TableHead>
+              <TableHead className="text-right">Saving Aprovado (Q)</TableHead>
+              <TableHead className="text-right">Investimento (R)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((p, i) => {
+              const highlight = metricKey;
+              return (
+                <TableRow key={p.matricula}>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="max-w-[320px]">
+                    <div className="truncate font-medium">{p.projeto}</div>
+                    <div className="text-xs text-muted-foreground">#{p.matricula}</div>
+                  </TableCell>
+                  <TableCell className="text-sm">{p.lider || "—"}</TableCell>
+                  <TableCell className="text-sm">{p.gerente || "—"}</TableCell>
+                  <TableCell className="text-xs">{p.faseAtual}</TableCell>
+                  <TableCell className="text-sm">{p.status || "—"}</TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "saving_previsto" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.saving_previsto)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "savingAprovadoEfetivo" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.savingAprovadoEfetivo)}
+                  </TableCell>
+                  <TableCell className={`text-right tabular-nums ${highlight === "investimento" ? "font-semibold" : ""}`}>
+                    {fmtMoney(p.investimento)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Ordenado por <b>{metricLabel}</b>. Saving Aprovado considera apenas projetos com status "Validado pela controladoria".
+      </p>
     </SectionCard>
   );
 }
