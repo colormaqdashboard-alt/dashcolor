@@ -706,6 +706,7 @@ export default function Dashboard() {
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="pareto">Pareto 80/20</TabsTrigger>
+            <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="alertas">
               Alertas
               {Object.values(alertas).reduce((s, a) => s + a.length, 0) > 0 ? (
