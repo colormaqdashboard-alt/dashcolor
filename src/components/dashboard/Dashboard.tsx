@@ -310,6 +310,53 @@ export default function Dashboard() {
     return Array.from(m, ([name, value]) => ({ name, value }));
   }, [projetos]);
 
+  // ---- Investimento agregado (coluna R já tratada) ----
+  const investPorStatus = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.status || "Sem status").trim() || "Sem status";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorGerente = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.gerente || "Sem gerente").trim() || "Sem gerente";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorLider = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.lider || "Sem líder").trim() || "Sem líder";
+      m.set(k, (m.get(k) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+  const investPorFase = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + (Number(p.investimento) || 0));
+    });
+    return Array.from(m, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [projetos]);
+
+  // ---- Rankings de Projetos ----
+  const rankSavingPrev = useMemo(
+    () => projetos.slice().sort((a, b) => (Number(b.saving_previsto) || 0) - (Number(a.saving_previsto) || 0)).slice(0, 20),
+    [projetos],
+  );
+  const rankSavingAprov = useMemo(
+    () => projetos.slice().filter((p) => p.savingAprovadoEfetivo > 0).sort((a, b) => b.savingAprovadoEfetivo - a.savingAprovadoEfetivo).slice(0, 20),
+    [projetos],
+  );
+  const rankInvest = useMemo(
+    () => projetos.slice().sort((a, b) => (Number(b.investimento) || 0) - (Number(a.investimento) || 0)).slice(0, 20),
+    [projetos],
+  );
+
   const evolucao = useMemo(() => {
     const m = new Map<string, { mes: string; iniciados: number; concluidos: number; saving: number }>();
     const key = (d: Date) =>
