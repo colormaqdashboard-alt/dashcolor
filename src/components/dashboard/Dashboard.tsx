@@ -541,8 +541,8 @@ export default function Dashboard() {
           />
           <Kpi
             label="Saving Previsto (12m)"
-            value={fmtMoney(totals.savingPrev)}
-            sub={`Aprovado: ${fmtMoney(totals.savingAprov)}`}
+            value={fmtMoney(totals.savingAprov)}
+            sub={`Apenas projetos "Validado pela controladoria" · Previsto bruto: ${fmtMoney(totals.savingPrev)}`}
             icon={<DollarSign className="h-5 w-5" />}
           />
           <Kpi
