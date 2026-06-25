@@ -48,6 +48,7 @@ import {
   Target,
   TrendingUp,
   Upload,
+  Users,
 } from "lucide-react";
 import {
   enrichProjetos,
