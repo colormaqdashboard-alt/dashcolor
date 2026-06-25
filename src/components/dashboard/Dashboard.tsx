@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -134,16 +134,6 @@ export default function Dashboard() {
     }
   };
 
-  // Auto-resync Google Sheets every 5 minutes when a URL is set
-  useEffect(() => {
-    if (source.label !== "Google Sheets" || !sheetUrl.trim()) return;
-    const id = setInterval(() => {
-      loadFromGoogleSheets(sheetUrl.trim())
-        .then((data) => applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`))
-        .catch(() => {});
-    }, 5 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [source.label, sheetUrl]);
 
   const [fStatus, setFStatus] = useState(ALL);
   const [fFase, setFFase] = useState(ALL);
@@ -433,9 +423,9 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-6">
         {/* Data Source */}
-        <SectionCard
+          <SectionCard
           title="Fonte de Dados"
-          description="Cole o link de uma planilha pública do Google Sheets (somente leitura)"
+          description="Cole o link de uma planilha pública do Google Sheets e clique em Sincronizar para baixar e alimentar o painel"
         >
           <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <div className="flex flex-col gap-1">
@@ -457,7 +447,7 @@ export default function Dashboard() {
               <label className="text-xs font-medium text-muted-foreground">&nbsp;</label>
               <Button onClick={handleSyncSheet} disabled={loadingSource || !sheetUrl.trim()}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${loadingSource ? "animate-spin" : ""}`} />
-                Sincronizar
+                {loadingSource ? "Baixando..." : "Sincronizar"}
               </Button>
             </div>
           </div>
@@ -469,7 +459,7 @@ export default function Dashboard() {
             <span>·</span>
             <span>Atualizado: {source.updatedAt.toLocaleString("pt-BR")}</span>
             {source.label === "Google Sheets" ? (
-              <Badge variant="secondary" className="ml-1">Sincronização automática a cada 5 min</Badge>
+              <Badge variant="secondary" className="ml-1">Sincronização manual</Badge>
             ) : null}
           </div>
           {sourceError ? (
@@ -479,7 +469,7 @@ export default function Dashboard() {
           ) : null}
           <p className="mt-2 text-xs text-muted-foreground">
             Como publicar: no Google Sheets, vá em <b>Compartilhar → Geral → Qualquer pessoa com o link (Leitor)</b>.
-            O painel lê as abas <b>Projetos.</b>, <b>EQUIPE</b> e <b>Funcionalidade</b>; demais abas são ignoradas.
+            Ao clicar em <b>Sincronizar</b>, o painel baixa a planilha (.xlsx) e atualiza os dados. Para refletir mudanças feitas na planilha, clique em Sincronizar novamente.
           </p>
         </SectionCard>
 

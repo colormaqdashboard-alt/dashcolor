@@ -234,15 +234,15 @@ async function fetchSheetCSV(id: string, sheetName: string): Promise<unknown[][]
 export async function loadFromGoogleSheets(url: string): Promise<DashboardData> {
   const id = extractSpreadsheetId(url);
   if (!id) throw new Error("URL inválida. Use o link de uma planilha do Google Sheets.");
-  const [projetosRows, equipeRows, funcRows] = await Promise.all([
-    fetchSheetCSV(id, "Projetos.").catch(() => fetchSheetCSV(id, "Projetos")),
-    fetchSheetCSV(id, "EQUIPE").catch(() => [] as unknown[][]),
-    fetchSheetCSV(id, "Funcionalidade").catch(() => [] as unknown[][]),
-  ]);
-  return {
-    projetos: buildProjetos(projetosRows),
-    equipe: buildEquipe(equipeRows),
-    metas: buildMetas(equipeRows),
-    fases: buildFases(funcRows),
-  };
+  // Download the whole spreadsheet as .xlsx (one request) and parse locally.
+  const exportUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=xlsx`;
+  const res = await fetch(exportUrl);
+  if (!res.ok) {
+    throw new Error(
+      `Falha ao baixar a planilha (HTTP ${res.status}). Verifique se ela está pública (Qualquer pessoa com o link · Leitor).`,
+    );
+  }
+  const buf = await res.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array", cellDates: true });
+  return workbookToData(wb);
 }
