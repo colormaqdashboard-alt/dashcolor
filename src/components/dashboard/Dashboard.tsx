@@ -78,13 +78,16 @@ const CHART_COLORS = [
 ];
 
 function statusBadge(p: EnrichedProjeto) {
-  if (p.concluido)
-    return <Badge className="bg-success text-success-foreground hover:bg-success">Validado</Badge>;
-  if (p.atrasado)
-    return <Badge variant="destructive">Atrasado</Badge>;
-  if (p.parado)
-    return <Badge className="bg-warning text-warning-foreground hover:bg-warning">Parado</Badge>;
-  return <Badge variant="secondary">{p.status || "Sem status"}</Badge>;
+  // Status sempre vem literal da coluna W da aba Projetos.
+  const s = (p.status || "").trim();
+  if (!s) return <Badge variant="secondary">Sem status</Badge>;
+  const low = s.toLowerCase();
+  if (low === "validado pela controladoria")
+    return <Badge className="bg-success text-success-foreground hover:bg-success">{s}</Badge>;
+  if (low === "atrasado") return <Badge variant="destructive">{s}</Badge>;
+  if (low === "inviabilizado")
+    return <Badge className="bg-black text-white hover:bg-black">{s}</Badge>;
+  return <Badge variant="secondary">{s}</Badge>;
 }
 
 export default function Dashboard() {
@@ -434,6 +437,118 @@ export default function Dashboard() {
     };
   }, [projetos]);
 
+  // ---- Status dos Projetos (página dedicada) ----
+  const statusProjetos = useMemo(() => {
+    const today = new Date();
+    const DAY = 86400000;
+    const parse = (v: string | null) => {
+      if (!v) return null;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    return projetos
+      .map((p) => {
+        const phaseDates = [
+          p.fase1, p.fase2, p.fase3, p.fase3_1, p.fase3_2, p.fase3_2_compras, p.fase4, p.fase5,
+        ]
+          .map(parse)
+          .filter((d): d is Date => d != null);
+        const ultimaFase = phaseDates.length
+          ? new Date(Math.max(...phaseDates.map((d) => d.getTime())))
+          : null;
+        const prazo = parse(p.prazo_acao);
+        const ultimaAtualizacao = parse(p.ultima_atualizacao);
+        const diasFase =
+          prazo && ultimaFase ? Math.round((prazo.getTime() - ultimaFase.getTime()) / DAY) : null;
+        const diasAtualizacao =
+          ultimaAtualizacao && ultimaFase
+            ? Math.round((ultimaAtualizacao.getTime() - ultimaFase.getTime()) / DAY)
+            : null;
+        const status = (p.status || "").trim();
+        const low = status.toLowerCase();
+        let atencao = {
+          label: "🟢 Em dia",
+          bg: "bg-success",
+          text: "text-black",
+          order: 99,
+        };
+        if (low === "inviabilizado") {
+          atencao = { label: "⚫ Inviabilizado", bg: "bg-black", text: "text-white", order: 6 };
+        } else if (low === "validado pela controladoria") {
+          atencao = {
+            label: "⚪ Validado pela controladoria",
+            bg: "bg-gray-400",
+            text: "text-black",
+            order: 5,
+          };
+        } else if (low === "atrasado") {
+          atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
+        } else if (
+          low === "coletando dados" &&
+          ultimaAtualizacao &&
+          prazo &&
+          (ultimaAtualizacao.getTime() - prazo.getTime()) / DAY > 60
+        ) {
+          atencao = {
+            label: "🔵 Projeto de longa execução",
+            bg: "bg-blue-600",
+            text: "text-white",
+            order: 1,
+          };
+        } else if (ultimaFase) {
+          const d = (today.getTime() - ultimaFase.getTime()) / DAY;
+          if (d > 60) {
+            atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
+          } else if (d >= 22) {
+            atencao = {
+              label: "🟡 Possível atraso",
+              bg: "bg-warning",
+              text: "text-black",
+              order: 2,
+            };
+          } else if (d >= 0) {
+            atencao = { label: "🟢 Em dia", bg: "bg-success", text: "text-black", order: 3 };
+          }
+        }
+        const tempoFase = ultimaFase
+          ? Math.round((today.getTime() - ultimaFase.getTime()) / DAY)
+          : -1;
+        return {
+          p,
+          ultimaFase,
+          prazo,
+          ultimaAtualizacao,
+          diasFase,
+          diasAtualizacao,
+          atencao,
+          tempoFase,
+        };
+      })
+      .sort(
+        (a, b) => a.atencao.order - b.atencao.order || b.tempoFase - a.tempoFase,
+      );
+  }, [projetos]);
+
+  const distPctConclusao = useMemo(() => {
+    const m = new Map<number, number>();
+    projetos.forEach((p) => {
+      const pct = Math.round(p.pctConclusao * 100);
+      m.set(pct, (m.get(pct) || 0) + 1);
+    });
+    return Array.from(m, ([pct, qtd]) => ({ pct: `${pct}%`, qtd, order: pct })).sort(
+      (a, b) => a.order - b.order,
+    );
+  }, [projetos]);
+
+  const distStatusW = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos.forEach((p) => {
+      const k = (p.status || "Sem status").trim() || "Sem status";
+      m.set(k, (m.get(k) || 0) + 1);
+    });
+    return Array.from(m, ([name, qtd]) => ({ name, qtd })).sort((a, b) => b.qtd - a.qtd);
+  }, [projetos]);
+
   const resetFilters = () => {
     setFStatus(ALL);
     setFFase(ALL);
@@ -703,16 +818,8 @@ export default function Dashboard() {
             <TabsTrigger value="pessoas">Pessoas</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="pareto">Pareto 80/20</TabsTrigger>
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
-            <TabsTrigger value="alertas">
-              Alertas
-              {Object.values(alertas).reduce((s, a) => s + a.length, 0) > 0 ? (
-                <Badge variant="destructive" className="ml-2">
-                  {Object.values(alertas).reduce((s, a) => s + a.length, 0)}
-                </Badge>
-              ) : null}
-            </TabsTrigger>
+            <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
             <TabsTrigger value="projetos">Projetos</TabsTrigger>
           </TabsList>
 
@@ -1033,17 +1140,6 @@ export default function Dashboard() {
             </SectionCard>
           </TabsContent>
 
-          {/* PARETO */}
-          <TabsContent value="pareto" className="mt-4 space-y-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <ParetoChart title="Pareto — Saving por Projeto (Top 20)" data={paretoProjetos} />
-              <ParetoChart title="Pareto — Saving por Setor" data={paretoSetor} />
-              <ParetoChart title="Pareto — Saving por Líder" data={paretoLider} />
-              <ParetoChart title="Pareto — Saving por Gerente" data={paretoGerente} />
-              <ParetoChart title="Pareto — Investimento por Projeto (Top 20)" data={paretoInvest} className="lg:col-span-2" />
-            </div>
-          </TabsContent>
-
           {/* RANKING DE PROJETOS */}
           <TabsContent value="ranking" className="mt-4 space-y-4">
             <RankingTable title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
@@ -1051,20 +1147,87 @@ export default function Dashboard() {
             <RankingTable title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
           </TabsContent>
 
-          {/* ALERTAS */}
-          <TabsContent value="alertas" className="mt-4 space-y-4">
-            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
-              <Kpi tone="danger" label="Sem Status" value={alertas.semStatus.length} />
-              <Kpi tone="warning" label="Sem Próxima Ação" value={alertas.semProxima.length} />
-              <Kpi tone="warning" label="Sem Responsável" value={alertas.semResponsavel.length} />
-              <Kpi tone="danger" label="Invest. > Saving" value={alertas.altoInvestBaixoSaving.length} />
-              <Kpi tone="warning" label="Parados (>30d)" value={alertas.parados.length} />
+          {/* STATUS DOS PROJETOS */}
+          <TabsContent value="status" className="mt-4 space-y-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SectionCard
+                title="Percentual de Conclusão"
+                description="Quantidade de projetos por % (mapeamento da aba Funcionalidade)"
+              >
+                <ChartWrap height={340}>
+                  <BarChart data={distPctConclusao} layout="vertical" margin={{ left: 12 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+                    <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={60} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="qtd" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
+              <SectionCard
+                title="Distribuição por Status (Coluna W)"
+                description="Quantidade de projetos por status"
+              >
+                <ChartWrap height={340}>
+                  <BarChart data={distStatusW} layout="vertical" margin={{ left: 12 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" stroke="var(--muted-foreground)" fontSize={11} width={220} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="qtd" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartWrap>
+              </SectionCard>
             </div>
-            <AlertList title="Projetos com alto investimento e baixo saving" items={alertas.altoInvestBaixoSaving} render={(p) => `Inv ${fmtMoney(p.investimento)} · Saving ${fmtMoney(p.saving_previsto)}`} tone="danger" />
-            <AlertList title="Projetos parados (sem atualização há mais de 30 dias)" items={alertas.parados} render={(p) => `Última atualização: ${fmtDate(p.dataUltimaFase || (p.ultima_atualizacao ? new Date(p.ultima_atualizacao) : null))}`} tone="warning" />
-            <AlertList title="Projetos sem próxima ação definida" items={alertas.semProxima} render={(p) => p.status || "Sem status"} tone="warning" />
-            <AlertList title="Projetos sem responsável pela ação" items={alertas.semResponsavel} render={(p) => p.proxima_acao || "Sem próxima ação"} tone="warning" />
-            <AlertList title="Projetos sem status" items={alertas.semStatus} render={(p) => p.faseAtual} tone="danger" />
+
+            <SectionCard
+              title="Status dos Projetos"
+              description="Painel gerencial para priorização — ordenado por nível de atenção e tempo na fase atual"
+            >
+              <div className="max-h-[640px] overflow-auto rounded-md border">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-card">
+                    <TableRow>
+                      <TableHead>Projeto</TableHead>
+                      <TableHead>Última fase iniciada</TableHead>
+                      <TableHead>Prazo da ação (V)</TableHead>
+                      <TableHead className="text-right">Dias corridos da fase</TableHead>
+                      <TableHead>Última atualização (Y)</TableHead>
+                      <TableHead className="text-right">Dias desde a última atualização</TableHead>
+                      <TableHead>Status (W)</TableHead>
+                      <TableHead>Atenção</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {statusProjetos.map(({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao }) => (
+                      <TableRow key={p.matricula}>
+                        <TableCell className="max-w-[280px]">
+                          <div className="truncate font-medium">{p.projeto}</div>
+                          <div className="text-xs text-muted-foreground">#{p.matricula}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{fmtDate(ultimaFase)}</TableCell>
+                        <TableCell className="text-sm">{fmtDate(prazo)}</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {diasFase != null ? `${diasFase} d` : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm">{fmtDate(ultimaAtualizacao)}</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {diasAtualizacao != null ? `${diasAtualizacao} d` : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm">{p.status || "—"}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${atencao.bg} ${atencao.text}`}
+                          >
+                            {atencao.label}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </SectionCard>
           </TabsContent>
 
           {/* TABELA COMPLETA */}
