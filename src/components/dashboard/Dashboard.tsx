@@ -19,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Bar,
   BarChart,
@@ -147,6 +149,22 @@ export default function Dashboard() {
   const [dFrom, setDFrom] = useState("");
   const [dTo, setDTo] = useState("");
   const [search, setSearch] = useState("");
+  const [showAtencao, setShowAtencao] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("statusProjetos.showAtencao") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowAtencao = (v: boolean) => {
+    setShowAtencao(v);
+    try {
+      window.localStorage.setItem("statusProjetos.showAtencao", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const statusOpts = useMemo(() => uniq(all.map((p) => p.status)), [all]);
   const faseOpts = useMemo(() => uniq(all.map((p) => p.faseAtual)), [all]);
@@ -438,6 +456,16 @@ export default function Dashboard() {
   }, [projetos]);
 
   // ---- Status dos Projetos (página dedicada) ----
+  const PHASE_DEFS = [
+    { key: "fase1", short: "🟢 1ª Fase", full: "Estudo do Problema / Variáveis" },
+    { key: "fase2", short: "🔵 2ª Fase", full: "Levantamento de Dados / Gráficos / DOE" },
+    { key: "fase3", short: "🟠 3ª Fase", full: "Plano de Ação sendo executado" },
+    { key: "fase3_1", short: "🟠 3.1 Fase", full: "Ações sem investimentos" },
+    { key: "fase3_2", short: "🟠 3.2 Fase", full: "Ações com investimentos" },
+    { key: "fase3_2_compras", short: "🟡 3.2 Compras", full: "Compras" },
+    { key: "fase4", short: "🟣 4ª Fase", full: "Instalação de Equipamentos / Estruturas / Ferramental" },
+    { key: "fase5", short: "✅ 5ª Fase", full: "Finalizado / PA coletando dados" },
+  ] as const;
   const statusProjetos = useMemo(() => {
     const today = new Date();
     const DAY = 86400000;
@@ -460,10 +488,18 @@ export default function Dashboard() {
         const ultimaAtualizacao = parse(p.ultima_atualizacao);
         const diasFase =
           prazo && ultimaFase ? Math.round((prazo.getTime() - ultimaFase.getTime()) / DAY) : null;
-        const diasAtualizacao =
-          ultimaAtualizacao && ultimaFase
-            ? Math.round((ultimaAtualizacao.getTime() - ultimaFase.getTime()) / DAY)
-            : null;
+        const diasAtualizacao = ultimaAtualizacao
+          ? Math.max(0, Math.floor((today.getTime() - ultimaAtualizacao.getTime()) / DAY))
+          : null;
+        // Fase atual = última coluna preenchida entre G e N (mais à direita)
+        let faseAtual: { short: string; full: string } | null = null;
+        for (let i = PHASE_DEFS.length - 1; i >= 0; i--) {
+          const def = PHASE_DEFS[i];
+          if (parse((p as any)[def.key])) {
+            faseAtual = { short: def.short, full: def.full };
+            break;
+          }
+        }
         const status = (p.status || "").trim();
         const low = status.toLowerCase();
         let atencao = {
@@ -522,6 +558,7 @@ export default function Dashboard() {
           diasAtualizacao,
           atencao,
           tempoFase,
+          faseAtual,
         };
       })
       .sort(
@@ -1184,26 +1221,48 @@ export default function Dashboard() {
               title="Status dos Projetos"
               description="Painel gerencial para priorização — ordenado por nível de atenção e tempo na fase atual"
             >
+              <div className="mb-3 flex items-center justify-end gap-2">
+                <Label htmlFor="toggle-atencao" className="text-sm text-muted-foreground cursor-pointer">
+                  Exibir coluna Atenção
+                </Label>
+                <Switch
+                  id="toggle-atencao"
+                  checked={showAtencao}
+                  onCheckedChange={toggleShowAtencao}
+                />
+              </div>
               <div className="max-h-[640px] overflow-auto rounded-md border">
                 <Table>
                   <TableHeader className="sticky top-0 bg-card">
                     <TableRow>
                       <TableHead>Projeto</TableHead>
+                      <TableHead>Líder</TableHead>
+                      <TableHead>Fase Atual</TableHead>
                       <TableHead>Última fase iniciada</TableHead>
                       <TableHead>Prazo da ação (V)</TableHead>
                       <TableHead className="text-right">Dias corridos da fase</TableHead>
                       <TableHead>Última atualização (Y)</TableHead>
                       <TableHead className="text-right">Dias desde a última atualização</TableHead>
                       <TableHead>Status (W)</TableHead>
-                      <TableHead>Atenção</TableHead>
+                      {showAtencao && <TableHead>Atenção</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {statusProjetos.map(({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao }) => (
+                    {statusProjetos.map(({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }) => (
                       <TableRow key={p.matricula}>
                         <TableCell className="max-w-[280px]">
                           <div className="truncate font-medium">{p.projeto}</div>
                           <div className="text-xs text-muted-foreground">#{p.matricula}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{p.lider || "—"}</TableCell>
+                        <TableCell className="text-sm">
+                          {faseAtual ? (
+                            <span title={faseAtual.full} className="cursor-help whitespace-nowrap">
+                              {faseAtual.short}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
                         </TableCell>
                         <TableCell className="text-sm">{fmtDate(ultimaFase)}</TableCell>
                         <TableCell className="text-sm">{fmtDate(prazo)}</TableCell>
@@ -1215,13 +1274,15 @@ export default function Dashboard() {
                           {diasAtualizacao != null ? `${diasAtualizacao} d` : "—"}
                         </TableCell>
                         <TableCell className="text-sm">{p.status || "—"}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${atencao.bg} ${atencao.text}`}
-                          >
-                            {atencao.label}
-                          </span>
-                        </TableCell>
+                        {showAtencao && (
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${atencao.bg} ${atencao.text}`}
+                            >
+                              {atencao.label}
+                            </span>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
