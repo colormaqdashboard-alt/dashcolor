@@ -149,6 +149,22 @@ export default function Dashboard() {
   const [dFrom, setDFrom] = useState("");
   const [dTo, setDTo] = useState("");
   const [search, setSearch] = useState("");
+  const [showAtencao, setShowAtencao] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("statusProjetos.showAtencao") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowAtencao = (v: boolean) => {
+    setShowAtencao(v);
+    try {
+      window.localStorage.setItem("statusProjetos.showAtencao", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const statusOpts = useMemo(() => uniq(all.map((p) => p.status)), [all]);
   const faseOpts = useMemo(() => uniq(all.map((p) => p.faseAtual)), [all]);
