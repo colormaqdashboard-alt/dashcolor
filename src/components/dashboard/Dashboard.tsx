@@ -1221,26 +1221,48 @@ export default function Dashboard() {
               title="Status dos Projetos"
               description="Painel gerencial para priorização — ordenado por nível de atenção e tempo na fase atual"
             >
+              <div className="mb-3 flex items-center justify-end gap-2">
+                <Label htmlFor="toggle-atencao" className="text-sm text-muted-foreground cursor-pointer">
+                  Exibir coluna Atenção
+                </Label>
+                <Switch
+                  id="toggle-atencao"
+                  checked={showAtencao}
+                  onCheckedChange={toggleShowAtencao}
+                />
+              </div>
               <div className="max-h-[640px] overflow-auto rounded-md border">
                 <Table>
                   <TableHeader className="sticky top-0 bg-card">
                     <TableRow>
                       <TableHead>Projeto</TableHead>
+                      <TableHead>Líder</TableHead>
+                      <TableHead>Fase Atual</TableHead>
                       <TableHead>Última fase iniciada</TableHead>
                       <TableHead>Prazo da ação (V)</TableHead>
                       <TableHead className="text-right">Dias corridos da fase</TableHead>
                       <TableHead>Última atualização (Y)</TableHead>
                       <TableHead className="text-right">Dias desde a última atualização</TableHead>
                       <TableHead>Status (W)</TableHead>
-                      <TableHead>Atenção</TableHead>
+                      {showAtencao && <TableHead>Atenção</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {statusProjetos.map(({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao }) => (
+                    {statusProjetos.map(({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }) => (
                       <TableRow key={p.matricula}>
                         <TableCell className="max-w-[280px]">
                           <div className="truncate font-medium">{p.projeto}</div>
                           <div className="text-xs text-muted-foreground">#{p.matricula}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{p.lider || "—"}</TableCell>
+                        <TableCell className="text-sm">
+                          {faseAtual ? (
+                            <span title={faseAtual.full} className="cursor-help whitespace-nowrap">
+                              {faseAtual.short}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
                         </TableCell>
                         <TableCell className="text-sm">{fmtDate(ultimaFase)}</TableCell>
                         <TableCell className="text-sm">{fmtDate(prazo)}</TableCell>
@@ -1252,13 +1274,15 @@ export default function Dashboard() {
                           {diasAtualizacao != null ? `${diasAtualizacao} d` : "—"}
                         </TableCell>
                         <TableCell className="text-sm">{p.status || "—"}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${atencao.bg} ${atencao.text}`}
-                          >
-                            {atencao.label}
-                          </span>
-                        </TableCell>
+                        {showAtencao && (
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${atencao.bg} ${atencao.text}`}
+                            >
+                              {atencao.label}
+                            </span>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
