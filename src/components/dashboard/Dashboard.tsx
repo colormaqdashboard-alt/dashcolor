@@ -19,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Bar,
   BarChart,
@@ -438,6 +440,16 @@ export default function Dashboard() {
   }, [projetos]);
 
   // ---- Status dos Projetos (página dedicada) ----
+  const PHASE_DEFS = [
+    { key: "fase1", short: "🟢 1ª Fase", full: "Estudo do Problema / Variáveis" },
+    { key: "fase2", short: "🔵 2ª Fase", full: "Levantamento de Dados / Gráficos / DOE" },
+    { key: "fase3", short: "🟠 3ª Fase", full: "Plano de Ação sendo executado" },
+    { key: "fase3_1", short: "🟠 3.1 Fase", full: "Ações sem investimentos" },
+    { key: "fase3_2", short: "🟠 3.2 Fase", full: "Ações com investimentos" },
+    { key: "fase3_2_compras", short: "🟡 3.2 Compras", full: "Compras" },
+    { key: "fase4", short: "🟣 4ª Fase", full: "Instalação de Equipamentos / Estruturas / Ferramental" },
+    { key: "fase5", short: "✅ 5ª Fase", full: "Finalizado / PA coletando dados" },
+  ] as const;
   const statusProjetos = useMemo(() => {
     const today = new Date();
     const DAY = 86400000;
@@ -460,10 +472,18 @@ export default function Dashboard() {
         const ultimaAtualizacao = parse(p.ultima_atualizacao);
         const diasFase =
           prazo && ultimaFase ? Math.round((prazo.getTime() - ultimaFase.getTime()) / DAY) : null;
-        const diasAtualizacao =
-          ultimaAtualizacao && ultimaFase
-            ? Math.round((ultimaAtualizacao.getTime() - ultimaFase.getTime()) / DAY)
-            : null;
+        const diasAtualizacao = ultimaAtualizacao
+          ? Math.max(0, Math.floor((today.getTime() - ultimaAtualizacao.getTime()) / DAY))
+          : null;
+        // Fase atual = última coluna preenchida entre G e N (mais à direita)
+        let faseAtual: { short: string; full: string } | null = null;
+        for (let i = PHASE_DEFS.length - 1; i >= 0; i--) {
+          const def = PHASE_DEFS[i];
+          if (parse((p as any)[def.key])) {
+            faseAtual = { short: def.short, full: def.full };
+            break;
+          }
+        }
         const status = (p.status || "").trim();
         const low = status.toLowerCase();
         let atencao = {
@@ -522,6 +542,7 @@ export default function Dashboard() {
           diasAtualizacao,
           atencao,
           tempoFase,
+          faseAtual,
         };
       })
       .sort(
