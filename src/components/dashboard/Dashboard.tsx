@@ -109,7 +109,7 @@ export default function Dashboard() {
 
   const applyData = (data: DashboardData, label: string, detail: string) => {
     if (!data.projetos.length) {
-      throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos.'");
+      throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos'.");
     }
     setSource({
       label,
