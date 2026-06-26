@@ -109,7 +109,7 @@ export default function Dashboard() {
 
   const applyData = (data: DashboardData, label: string, detail: string) => {
     if (!data.projetos.length) {
-      throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos.'");
+      throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos'.");
     }
     setSource({
       label,
@@ -564,7 +564,7 @@ export default function Dashboard() {
         </SectionCard>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <Kpi
             tone="primary"
             label="Total de Projetos"
@@ -587,10 +587,16 @@ export default function Dashboard() {
             icon={<TrendingUp className="h-5 w-5" />}
           />
           <Kpi
-            label="Saving Previsto (12m)"
-            value={fmtMoney(totals.savingAprov)}
-            sub={`Apenas projetos "Validado pela controladoria" · Previsto bruto: ${fmtMoney(totals.savingPrev)}`}
+            label="Saving Previsto (12 meses)"
+            value={fmtMoney(totals.savingPrev)}
+            sub="Coluna P · todos os projetos"
             icon={<DollarSign className="h-5 w-5" />}
+          />
+          <Kpi
+            label="Saving Aprovado pela Controladoria"
+            value={fmtMoney(totals.savingAprov)}
+            sub='Coluna Q · apenas status "Validado pela controladoria"'
+            icon={<CheckCircle2 className="h-5 w-5" />}
           />
           <Kpi
             label="ROI Estimado"
@@ -601,21 +607,13 @@ export default function Dashboard() {
         </div>
 
         {/* Time KPIs */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3">
           <Kpi
             tone="info"
             label="Tempo Médio de Projeto"
             value={`${Math.round(prazo.tempoMedio)} d`}
             icon={<Clock className="h-5 w-5" />}
           />
-          <Kpi
-            tone="success"
-            label="No Prazo"
-            value={prazo.noPrazo}
-            className="text-black [&_*]:text-black"
-          />
-          <Kpi tone="danger" label="Atrasados" value={prazo.atrasados} icon={<AlertTriangle className="h-5 w-5" />} />
-          <Kpi tone="warning" label="Sem Prazo Definido" value={prazo.semPrazo} />
         </div>
 
         <SectionCard
