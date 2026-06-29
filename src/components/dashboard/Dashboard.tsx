@@ -68,6 +68,7 @@ import {
 } from "@/lib/data-source";
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
+import { FinanceiroTable } from "./FinanceiroTable";
 
 const ALL = "__all__";
 
