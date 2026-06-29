@@ -268,6 +268,12 @@ export default function Dashboard() {
   }, [projetos]);
 
   const porGerente = useMemo(() => {
+    const metaMap = new Map<string, number>();
+    (source.metas || []).forEach((mt) => {
+      const k = (mt.gerente || "").trim();
+      if (!k) return;
+      metaMap.set(k, (metaMap.get(k) || 0) + (Number(mt.meta) || 0));
+    });
     const m = new Map<string, { qtd: number; saving: number; aprovado: number }>();
     projetos.forEach((p) => {
       const k = (p.gerente || "Sem gerente").trim();
@@ -277,10 +283,12 @@ export default function Dashboard() {
       cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
-    return Array.from(m, ([gerente, v]) => ({ gerente, ...v })).sort(
-      (a, b) => b.saving - a.saving
-    );
-  }, [projetos]);
+    return Array.from(m, ([gerente, v]) => {
+      const meta = metaMap.get(gerente) || 0;
+      const belowMeta = meta > 0 && v.saving < meta;
+      return { gerente, ...v, meta, belowMeta };
+    }).sort((a, b) => b.saving - a.saving);
+  }, [projetos, source.metas]);
 
   // Meta por Gerente — realizado = soma de Projetos!Q (saving_aprovado),
   // meta = EQUIPE!F. Sem limite de valor.
