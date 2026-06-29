@@ -1031,16 +1031,68 @@ export default function Dashboard() {
 
           {/* FINANCEIRO */}
           <TabsContent value="financeiro" className="mt-4 space-y-4">
+            <SectionCard
+              title="Tabela Financeira dos Projetos"
+              description="Análise individual: investimento, saving, ROI anual e status — sincronizada com os filtros globais"
+            >
+              <FinanceiroTable projetos={projetos} />
+            </SectionCard>
             <div className="grid gap-4 lg:grid-cols-2">
-              <SectionCard title="Saving Previsto vs Aprovado por Gerente">
+              <SectionCard
+                title="Saving Previsto vs Aprovado por Gerente"
+                description="Barra e nome em vermelho indicam gerente abaixo da meta anual"
+              >
                 <ChartWrap>
                   <BarChart data={porGerente}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="gerente" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
+                    <XAxis
+                      dataKey="gerente"
+                      stroke="var(--muted-foreground)"
+                      fontSize={10}
+                      angle={-25}
+                      textAnchor="end"
+                      height={70}
+                      interval={0}
+                      tick={(props: any) => {
+                        const { x, y, payload } = props;
+                        const row = porGerente.find((g) => g.gerente === payload.value);
+                        const fill = row?.belowMeta ? "var(--destructive)" : "var(--muted-foreground)";
+                        const weight = row?.belowMeta ? 600 : 400;
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            dy={8}
+                            transform={`rotate(-25, ${x}, ${y})`}
+                            textAnchor="end"
+                            fontSize={10}
+                            fill={fill}
+                            fontWeight={weight}
+                          >
+                            {payload.value}
+                          </text>
+                        );
+                      }}
+                    />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Tooltip
+                      formatter={(v: any, name: any) => [fmtMoney(Number(v)), name]}
+                      labelFormatter={(label: any) => {
+                        const row = porGerente.find((g) => g.gerente === label);
+                        if (!row || !row.meta) return label;
+                        return `${label} · Meta: ${fmtMoney(row.meta)}`;
+                      }}
+                      contentStyle={tooltipStyle}
+                    />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="saving" name="Previsto" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="saving" name="Previsto" radius={[4, 4, 0, 0]}>
+                      {porGerente.map((g, i) => (
+                        <Cell
+                          key={i}
+                          fill={g.belowMeta ? "var(--destructive)" : "var(--chart-1)"}
+                        />
+                      ))}
+                    </Bar>
                     <Bar dataKey="aprovado" name="Aprovado" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ChartWrap>
