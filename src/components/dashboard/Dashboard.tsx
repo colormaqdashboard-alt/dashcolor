@@ -68,6 +68,7 @@ import {
 } from "@/lib/data-source";
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
+import { FinanceiroTable } from "./FinanceiroTable";
 
 const ALL = "__all__";
 
@@ -267,6 +268,12 @@ export default function Dashboard() {
   }, [projetos]);
 
   const porGerente = useMemo(() => {
+    const metaMap = new Map<string, number>();
+    (source.metas || []).forEach((mt) => {
+      const k = (mt.gerente || "").trim();
+      if (!k) return;
+      metaMap.set(k, (metaMap.get(k) || 0) + (Number(mt.meta) || 0));
+    });
     const m = new Map<string, { qtd: number; saving: number; aprovado: number }>();
     projetos.forEach((p) => {
       const k = (p.gerente || "Sem gerente").trim();
@@ -276,10 +283,12 @@ export default function Dashboard() {
       cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
-    return Array.from(m, ([gerente, v]) => ({ gerente, ...v })).sort(
-      (a, b) => b.saving - a.saving
-    );
-  }, [projetos]);
+    return Array.from(m, ([gerente, v]) => {
+      const meta = metaMap.get(gerente) || 0;
+      const belowMeta = meta > 0 && v.saving < meta;
+      return { gerente, ...v, meta, belowMeta };
+    }).sort((a, b) => b.saving - a.saving);
+  }, [projetos, source.metas]);
 
   // Meta por Gerente — realizado = soma de Projetos!Q (saving_aprovado),
   // meta = EQUIPE!F. Sem limite de valor.
@@ -1022,16 +1031,68 @@ export default function Dashboard() {
 
           {/* FINANCEIRO */}
           <TabsContent value="financeiro" className="mt-4 space-y-4">
+            <SectionCard
+              title="Tabela Financeira dos Projetos"
+              description="Análise individual: investimento, saving, ROI anual e status — sincronizada com os filtros globais"
+            >
+              <FinanceiroTable projetos={projetos} />
+            </SectionCard>
             <div className="grid gap-4 lg:grid-cols-2">
-              <SectionCard title="Saving Previsto vs Aprovado por Gerente">
+              <SectionCard
+                title="Saving Previsto vs Aprovado por Gerente"
+                description="Barra e nome em vermelho indicam gerente abaixo da meta anual"
+              >
                 <ChartWrap>
                   <BarChart data={porGerente}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="gerente" stroke="var(--muted-foreground)" fontSize={10} angle={-25} textAnchor="end" height={70} />
+                    <XAxis
+                      dataKey="gerente"
+                      stroke="var(--muted-foreground)"
+                      fontSize={10}
+                      angle={-25}
+                      textAnchor="end"
+                      height={70}
+                      interval={0}
+                      tick={(props: any) => {
+                        const { x, y, payload } = props;
+                        const row = porGerente.find((g) => g.gerente === payload.value);
+                        const fill = row?.belowMeta ? "var(--destructive)" : "var(--muted-foreground)";
+                        const weight = row?.belowMeta ? 600 : 400;
+                        return (
+                          <text
+                            x={x}
+                            y={y}
+                            dy={8}
+                            transform={`rotate(-25, ${x}, ${y})`}
+                            textAnchor="end"
+                            fontSize={10}
+                            fill={fill}
+                            fontWeight={weight}
+                          >
+                            {payload.value}
+                          </text>
+                        );
+                      }}
+                    />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: any) => fmtMoney(Number(v))} contentStyle={tooltipStyle} />
+                    <Tooltip
+                      formatter={(v: any, name: any) => [fmtMoney(Number(v)), name]}
+                      labelFormatter={(label: any) => {
+                        const row = porGerente.find((g) => g.gerente === label);
+                        if (!row || !row.meta) return label;
+                        return `${label} · Meta: ${fmtMoney(row.meta)}`;
+                      }}
+                      contentStyle={tooltipStyle}
+                    />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="saving" name="Previsto" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="saving" name="Previsto" radius={[4, 4, 0, 0]}>
+                      {porGerente.map((g, i) => (
+                        <Cell
+                          key={i}
+                          fill={g.belowMeta ? "var(--destructive)" : "var(--chart-1)"}
+                        />
+                      ))}
+                    </Bar>
                     <Bar dataKey="aprovado" name="Aprovado" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ChartWrap>
