@@ -57,6 +57,8 @@ import {
   fmtDate,
   fmtMoney,
   fmtPct,
+  fmtPayback,
+  computePaybackValidado,
   pareto,
   uniq,
   type Projeto,
@@ -208,7 +210,9 @@ export default function Dashboard() {
       projetos.length === 0
         ? 0
         : projetos.reduce((s, p) => s + p.pctConclusao, 0) / projetos.length;
-    const roi = investimento > 0 ? savingAprov / investimento : null;
+    // ROI = tempo de retorno (Investimento ÷ Saving). Aplica fallback:
+    // usa saving aprovado (validado) quando > 0, senão saving previsto.
+    const roi = computePaybackValidado(investimento, savingAprov, savingPrev);
     return {
       total: projetos.length,
       validados: validados.length,
@@ -761,8 +765,8 @@ export default function Dashboard() {
           />
           <Kpi
             label="ROI Estimado"
-            value={totals.roi == null ? "—" : `${totals.roi.toFixed(1)}x`}
-            sub={`Investimento: ${fmtMoney(totals.investimento)}`}
+            value={fmtPayback(totals.roi)}
+            sub={`Tempo de retorno · Investimento: ${fmtMoney(totals.investimento)}`}
             icon={<TrendingUp className="h-5 w-5" />}
           />
         </div>
@@ -1126,7 +1130,7 @@ export default function Dashboard() {
             <div className="grid gap-3 md:grid-cols-3">
               <Kpi tone="info" label="Total de Investimento" value={fmtMoney(totals.investimento)} sub="Coluna R tratada (alfanumérica)" icon={<DollarSign className="h-5 w-5" />} />
               <Kpi tone="success" label="Saving Aprovado (validados)" value={fmtMoney(totals.savingAprov)} sub="Somente status = Validado pela controladoria" />
-              <Kpi label="ROI Estimado" value={totals.roi == null ? "—" : `${totals.roi.toFixed(2)}x`} sub="Aprovado ÷ Investimento" />
+              <Kpi label="ROI Estimado" value={fmtPayback(totals.roi)} sub="Tempo de retorno (Investimento ÷ Saving)" />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
