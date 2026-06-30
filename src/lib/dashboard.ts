@@ -78,6 +78,68 @@ export const fmtPct = (n: number) =>
 export const fmtDate = (d: Date | null) =>
   d ? d.toLocaleDateString("pt-BR") : "—";
 
+/**
+ * ROI (Payback) — tempo de retorno do investimento em ANOS.
+ * Regra única do sistema:
+ *  - investimento === 0  → Infinity (exibido como "∞")
+ *  - saving <= 0         → null (exibido como "—")
+ *  - caso contrário       → investimento / saving (em anos)
+ */
+export function computePayback(investimento: number, saving: number): number | null {
+  const inv = Number(investimento) || 0;
+  const sav = Number(saving) || 0;
+  if (inv === 0) return Infinity;
+  if (sav <= 0) return null;
+  return inv / sav;
+}
+
+/** ROI Validado com fallback: usa savingValidado quando > 0, senão savingPrevisto. */
+export function computePaybackValidado(
+  investimento: number,
+  savingValidado: number,
+  savingPrevisto: number,
+): number | null {
+  const sv = Number(savingValidado) || 0;
+  return computePayback(investimento, sv > 0 ? sv : Number(savingPrevisto) || 0);
+}
+
+/** Formata anos em texto intuitivo: "X dias" / "X meses" / "X ano(s) e Y mês/meses". */
+export function fmtPayback(years: number | null | undefined): string {
+  if (years == null) return "—";
+  if (!isFinite(years)) return "∞";
+  if (years < 0) return "—";
+  const totalDays = Math.round(years * 365);
+  if (totalDays < 30) {
+    const d = Math.max(1, totalDays);
+    return `${d} ${d === 1 ? "dia" : "dias"}`;
+  }
+  const totalMonths = Math.max(1, Math.round(years * 12));
+  if (totalMonths < 12) {
+    return `${totalMonths} ${totalMonths === 1 ? "mês" : "meses"}`;
+  }
+  const y = Math.floor(totalMonths / 12);
+  const m = totalMonths % 12;
+  const yLabel = `${y} ${y === 1 ? "ano" : "anos"}`;
+  if (m === 0) return yLabel;
+  return `${yLabel} e ${m} ${m === 1 ? "mês" : "meses"}`;
+}
+
+/** Classe de cor (Tailwind) para o payback: < 1 ano (success), 1-3 anos (warning), > 3 (danger). */
+export function paybackToneClass(years: number | null | undefined): string {
+  if (years == null) return "text-muted-foreground";
+  if (!isFinite(years)) return "text-success font-semibold";
+  if (years < 1) return "text-success font-semibold";
+  if (years <= 3) return "text-warning font-semibold";
+  return "text-destructive font-semibold";
+}
+
+/** Comparador para ordenação asc: menor payback (melhor) primeiro; ∞ (sem investimento) é o melhor; null é o pior. */
+export function paybackCompare(a: number | null, b: number | null): number {
+  const va = a == null ? Number.POSITIVE_INFINITY : !isFinite(a) ? -1 : a;
+  const vb = b == null ? Number.POSITIVE_INFINITY : !isFinite(b) ? -1 : b;
+  return va - vb;
+}
+
 export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
   let faseAtual = "Não Iniciado";
   let faseAtualPct = 0;
