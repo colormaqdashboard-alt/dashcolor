@@ -22,7 +22,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
-import { fmtMoney, uniq, type EnrichedProjeto } from "@/lib/dashboard";
+import {
+  computePayback,
+  computePaybackValidado,
+  fmtMoney,
+  fmtPayback,
+  paybackCompare,
+  paybackToneClass,
+  uniq,
+  type EnrichedProjeto,
+} from "@/lib/dashboard";
 
 const ALL = "__all__";
 const COL_ORDER_KEY = "financeiro-table-col-order-v1";
@@ -43,7 +52,7 @@ type Row = {
   investimento: number;
   savingPrev: number;
   savingVal: number;
-  roiPrev: number | null; // null => "-"; Infinity => "∞"
+  roiPrev: number | null; // anos (payback); Infinity => "∞", null => "—"
   roiVal: number | null;
 };
 
@@ -64,33 +73,6 @@ const DEFAULT_COLS: ColDef[] = [
   { key: "roiVal", label: "ROI Validado", align: "right" },
   { key: "status", label: "Status" },
 ];
-
-function computeROI(saving: number, invest: number): number | null {
-  if (invest > 0) return saving / invest;
-  if (saving > 0) return Infinity;
-  return null;
-}
-
-function roiLabel(v: number | null): string {
-  if (v == null) return "—";
-  if (!isFinite(v)) return "∞";
-  return `${v.toFixed(2)}x`;
-}
-
-function roiToneClass(v: number | null): string {
-  if (v == null) return "text-muted-foreground";
-  if (!isFinite(v)) return "text-success font-semibold";
-  if (v >= 3) return "text-success font-semibold";
-  if (v >= 1) return "text-warning font-semibold";
-  return "text-destructive font-semibold";
-}
-
-function roiCompare(a: number | null, b: number | null): number {
-  // Sort order for asc: null < finite < ∞
-  const va = a == null ? -Infinity : a;
-  const vb = b == null ? -Infinity : b;
-  return va - vb;
-}
 
 export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
   const [search, setSearch] = useState("");
@@ -176,8 +158,8 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
           investimento,
           savingPrev,
           savingVal,
-          roiPrev: computeROI(savingPrev, investimento),
-          roiVal: computeROI(savingVal, investimento),
+          roiPrev: computePayback(investimento, savingPrev),
+          roiVal: computePaybackValidado(investimento, savingVal, savingPrev),
         };
       }),
     [projetos],
@@ -229,10 +211,10 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
           cmp = a.savingVal - b.savingVal;
           break;
         case "roiPrev":
-          cmp = roiCompare(a.roiPrev, b.roiPrev);
+          cmp = paybackCompare(a.roiPrev, b.roiPrev);
           break;
         case "roiVal":
-          cmp = roiCompare(a.roiVal, b.roiVal);
+          cmp = paybackCompare(a.roiVal, b.roiVal);
           break;
       }
       return cmp * dir;
@@ -285,14 +267,14 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
         );
       case "roiPrev":
         return (
-          <TableCell className={`text-right text-sm tabular-nums ${roiToneClass(r.roiPrev)}`}>
-            {roiLabel(r.roiPrev)}
+          <TableCell className={`text-right text-sm tabular-nums ${paybackToneClass(r.roiPrev)}`}>
+            {fmtPayback(r.roiPrev)}
           </TableCell>
         );
       case "roiVal":
         return (
-          <TableCell className={`text-right text-sm tabular-nums ${roiToneClass(r.roiVal)}`}>
-            {roiLabel(r.roiVal)}
+          <TableCell className={`text-right text-sm tabular-nums ${paybackToneClass(r.roiVal)}`}>
+            {fmtPayback(r.roiVal)}
           </TableCell>
         );
       case "status":
@@ -397,10 +379,10 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
       </div>
       </TooltipProvider>
       <p className="text-xs text-muted-foreground">
-        Exibindo <b>{sorted.length}</b> de {rows.length} projetos · Arraste o cabeçalho para reordenar colunas · ROI anual (Saving ÷ Investimento) ·
-        <span className="ml-1"><span className="text-success">●</span> Alto (≥3x)</span> ·
-        <span className="ml-1"><span className="text-warning">●</span> Médio (1–3x)</span> ·
-        <span className="ml-1"><span className="text-destructive">●</span> Baixo (&lt;1x)</span>
+        Exibindo <b>{sorted.length}</b> de {rows.length} projetos · Arraste o cabeçalho para reordenar colunas · ROI = tempo de retorno (Investimento ÷ Saving) ·
+        <span className="ml-1"><span className="text-success">●</span> &lt; 1 ano</span> ·
+        <span className="ml-1"><span className="text-warning">●</span> 1–3 anos</span> ·
+        <span className="ml-1"><span className="text-destructive">●</span> &gt; 3 anos</span>
       </p>
     </div>
   );
