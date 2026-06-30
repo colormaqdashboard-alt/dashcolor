@@ -95,21 +95,56 @@ function statusBadge(p: EnrichedProjeto) {
   return <Badge variant="secondary">{s}</Badge>;
 }
 
+const STORAGE_KEY = "dashboard.source.v1";
+const SHEET_URL_KEY = "dashboard.sheetUrl.v1";
+
+type SourceState = {
+  label: string;
+  detail: string;
+  projetos: Projeto[];
+  metas: { gerente: string; meta: number }[];
+  updatedAt: Date;
+};
+
+function loadPersistedSource(): SourceState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.projetos?.length) return null;
+    return {
+      label: parsed.label,
+      detail: parsed.detail,
+      projetos: parsed.projetos as Projeto[],
+      metas: parsed.metas || [],
+      updatedAt: parsed.updatedAt ? new Date(parsed.updatedAt) : new Date(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function Dashboard() {
-  const [source, setSource] = useState<{
-    label: string;
-    detail: string;
-    projetos: Projeto[];
-    metas: { gerente: string; meta: number }[];
-    updatedAt: Date;
-  }>(() => ({
-    label: "Dados de exemplo (interno)",
-    detail: `${RAW.projetos.length} projetos`,
-    projetos: RAW.projetos as Projeto[],
-    metas: RAW.metas || [],
-    updatedAt: new Date(),
-  }));
-  const [sheetUrl, setSheetUrl] = useState("");
+  const [source, setSource] = useState<SourceState>(() => {
+    const persisted = loadPersistedSource();
+    if (persisted) return persisted;
+    return {
+      label: "Dados de exemplo (interno)",
+      detail: `${RAW.projetos.length} projetos`,
+      projetos: RAW.projetos as Projeto[],
+      metas: RAW.metas || [],
+      updatedAt: new Date(),
+    };
+  });
+  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      return window.localStorage.getItem(SHEET_URL_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const [loadingSource, setLoadingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
 
@@ -119,13 +154,22 @@ export default function Dashboard() {
     if (!data.projetos.length) {
       throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos'.");
     }
-    setSource({
+    const next: SourceState = {
       label,
       detail,
       projetos: data.projetos,
       metas: data.metas || [],
       updatedAt: new Date(),
-    });
+    };
+    setSource(next);
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ ...next, updatedAt: next.updatedAt.toISOString() }),
+      );
+    } catch {
+      /* ignore quota errors */
+    }
   };
 
   const handleSyncSheet = async () => {
@@ -135,6 +179,11 @@ export default function Dashboard() {
     try {
       const data = await loadFromGoogleSheets(sheetUrl.trim());
       applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`);
+      try {
+        window.localStorage.setItem(SHEET_URL_KEY, sheetUrl.trim());
+      } catch {
+        /* ignore */
+      }
     } catch (e: any) {
       setSourceError(e?.message || "Erro ao sincronizar a planilha.");
     } finally {
