@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -148,9 +149,55 @@ export default function Dashboard() {
   const [loadingSource, setLoadingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
 
+  // Hidrata do Cloud (compartilhado para todos os visitantes). Se houver
+  // snapshot na nuvem mais recente que o cache local, substitui o estado.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("dashboard_snapshot")
+          .select("label, detail, sheet_url, projetos, metas, updated_at")
+          .eq("id", 1)
+          .maybeSingle();
+        if (cancelled || error || !data) return;
+        const projetos = (data.projetos as unknown as Projeto[]) || [];
+        if (!projetos.length) return;
+        const next: SourceState = {
+          label: data.label || "Google Sheets",
+          detail: data.detail || `${projetos.length} projetos sincronizados`,
+          projetos,
+          metas: (data.metas as unknown as { gerente: string; meta: number }[]) || [],
+          updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
+        };
+        setSource(next);
+        if (data.sheet_url) setSheetUrl(data.sheet_url);
+        try {
+          window.localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ ...next, updatedAt: next.updatedAt.toISOString() }),
+          );
+          if (data.sheet_url) window.localStorage.setItem(SHEET_URL_KEY, data.sheet_url);
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* offline ou sem permissão — mantém cache local */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const all = useMemo(() => enrichProjetos(source.projetos), [source]);
 
-  const applyData = (data: DashboardData, label: string, detail: string) => {
+  const applyData = async (
+    data: DashboardData,
+    label: string,
+    detail: string,
+    persistSheetUrl?: string,
+  ) => {
     if (!data.projetos.length) {
       throw new Error("Nenhum projeto encontrado. Verifique os cabeçalhos da aba 'Projetos'.");
     }
@@ -170,6 +217,23 @@ export default function Dashboard() {
     } catch {
       /* ignore quota errors */
     }
+    // Persiste na nuvem para todos os visitantes verem os mesmos dados.
+    try {
+      await supabase.from("dashboard_snapshot").upsert(
+        {
+          id: 1,
+          label,
+          detail,
+          sheet_url: persistSheetUrl ?? null,
+          projetos: data.projetos as any,
+          metas: (data.metas || []) as any,
+          updated_at: next.updatedAt.toISOString(),
+        },
+        { onConflict: "id" },
+      );
+    } catch {
+      /* não bloqueia o painel se a nuvem falhar */
+    }
   };
 
   const handleSyncSheet = async () => {
@@ -177,10 +241,11 @@ export default function Dashboard() {
     setLoadingSource(true);
     setSourceError(null);
     try {
-      const data = await loadFromGoogleSheets(sheetUrl.trim());
-      applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`);
+      const url = sheetUrl.trim();
+      const data = await loadFromGoogleSheets(url);
+      await applyData(data, "Google Sheets", `${data.projetos.length} projetos sincronizados`, url);
       try {
-        window.localStorage.setItem(SHEET_URL_KEY, sheetUrl.trim());
+        window.localStorage.setItem(SHEET_URL_KEY, url);
       } catch {
         /* ignore */
       }
