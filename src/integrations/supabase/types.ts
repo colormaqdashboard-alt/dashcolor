@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dashboard_snapshot: {
+        Row: {
+          detail: string | null
+          id: number
+          label: string | null
+          metas: Json
+          projetos: Json
+          sheet_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          detail?: string | null
+          id?: number
+          label?: string | null
+          metas?: Json
+          projetos?: Json
+          sheet_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          detail?: string | null
+          id?: number
+          label?: string | null
+          metas?: Json
+          projetos?: Json
+          sheet_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
