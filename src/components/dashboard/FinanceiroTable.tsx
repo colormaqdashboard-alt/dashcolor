@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -35,6 +36,11 @@ import {
 
 const ALL = "__all__";
 const COL_ORDER_KEY = "financeiro-table-col-order-v1";
+
+function hasBlackStatusTreatment(status: string) {
+  const low = status.trim().toLowerCase();
+  return low === "inviabilizado" || low === "reprovado pela controladoria";
+}
 
 type SortKey =
   | "projeto"
@@ -278,7 +284,24 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
           </TableCell>
         );
       case "status":
-        return <TableCell className="text-sm">{r.p.status || "—"}</TableCell>;
+        return (
+          <TableCell>
+            {r.p.status ? (
+              <Badge
+                className={
+                  hasBlackStatusTreatment(r.p.status)
+                    ? "bg-black text-white hover:bg-black"
+                    : undefined
+                }
+                variant={hasBlackStatusTreatment(r.p.status) ? undefined : "secondary"}
+              >
+                {r.p.status}
+              </Badge>
+            ) : (
+              "—"
+            )}
+          </TableCell>
+        );
     }
   };
 
