@@ -58,8 +58,6 @@ import {
   fmtDate,
   fmtMoney,
   fmtPct,
-  fmtPayback,
-  computePaybackValidado,
   pareto,
   uniq,
   type Projeto,
@@ -83,6 +81,11 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
+function hasBlackStatusTreatment(status: string) {
+  const low = status.trim().toLowerCase();
+  return low === "inviabilizado" || low === "reprovado pela controladoria";
+}
+
 function statusBadge(p: EnrichedProjeto) {
   // Status sempre vem literal da coluna W da aba Projetos.
   const s = (p.status || "").trim();
@@ -91,7 +94,7 @@ function statusBadge(p: EnrichedProjeto) {
   if (low === "validado pela controladoria")
     return <Badge className="bg-success text-success-foreground hover:bg-success">{s}</Badge>;
   if (low === "atrasado") return <Badge variant="destructive">{s}</Badge>;
-  if (low === "inviabilizado")
+  if (hasBlackStatusTreatment(s))
     return <Badge className="bg-black text-white hover:bg-black">{s}</Badge>;
   return <Badge variant="secondary">{s}</Badge>;
 }
@@ -324,9 +327,6 @@ export default function Dashboard() {
       projetos.length === 0
         ? 0
         : projetos.reduce((s, p) => s + p.pctConclusao, 0) / projetos.length;
-    // ROI = tempo de retorno (Investimento ÷ Saving). Aplica fallback:
-    // usa saving aprovado (validado) quando > 0, senão saving previsto.
-    const roi = computePaybackValidado(investimento, savingAprov, savingPrev);
     return {
       total: projetos.length,
       validados: validados.length,
@@ -336,7 +336,6 @@ export default function Dashboard() {
       savingAprov,
       investimento,
       pctMedio,
-      roi,
     };
   }, [projetos]);
 
@@ -635,8 +634,8 @@ export default function Dashboard() {
           text: "text-black",
           order: 99,
         };
-        if (low === "inviabilizado") {
-          atencao = { label: "⚫ Inviabilizado", bg: "bg-black", text: "text-white", order: 6 };
+        if (hasBlackStatusTreatment(status)) {
+          atencao = { label: `⚫ ${status}`, bg: "bg-black", text: "text-white", order: 6 };
         } else if (low === "validado pela controladoria") {
           atencao = {
             label: "⚪ Validado pela controladoria",
@@ -876,12 +875,6 @@ export default function Dashboard() {
             value={fmtMoney(totals.savingAprov)}
             sub='Coluna Q · apenas status "Validado pela controladoria"'
             icon={<CheckCircle2 className="h-5 w-5" />}
-          />
-          <Kpi
-            label="ROI Estimado"
-            value={fmtPayback(totals.roi)}
-            sub={`Tempo de retorno · Investimento: ${fmtMoney(totals.investimento)}`}
-            icon={<TrendingUp className="h-5 w-5" />}
           />
         </div>
 
@@ -1241,10 +1234,9 @@ export default function Dashboard() {
               </ChartWrap>
             </SectionCard>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <Kpi tone="info" label="Total de Investimento" value={fmtMoney(totals.investimento)} sub="Coluna R tratada (alfanumérica)" icon={<DollarSign className="h-5 w-5" />} />
               <Kpi tone="success" label="Saving Aprovado (validados)" value={fmtMoney(totals.savingAprov)} sub="Somente status = Validado pela controladoria" />
-              <Kpi label="ROI Estimado" value={fmtPayback(totals.roi)} sub="Tempo de retorno (Investimento ÷ Saving)" />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -1452,7 +1444,7 @@ export default function Dashboard() {
                         <TableCell className="text-right text-sm tabular-nums">
                           {diasAtualizacao != null ? `${diasAtualizacao} d` : "—"}
                         </TableCell>
-                        <TableCell className="text-sm">{p.status || "—"}</TableCell>
+                        <TableCell>{statusBadge(p)}</TableCell>
                         {showAtencao && (
                           <TableCell>
                             <span
@@ -1689,7 +1681,7 @@ function RankingTable({
                   <TableCell className="text-sm">{p.lider || "—"}</TableCell>
                   <TableCell className="text-sm">{p.gerente || "—"}</TableCell>
                   <TableCell className="text-xs">{p.faseAtual}</TableCell>
-                  <TableCell className="text-sm">{p.status || "—"}</TableCell>
+                  <TableCell>{statusBadge(p)}</TableCell>
                   <TableCell className={`text-right tabular-nums ${highlight === "saving_previsto" ? "font-semibold" : ""}`}>
                     {fmtMoney(p.saving_previsto)}
                   </TableCell>
