@@ -847,7 +847,7 @@ export default function Dashboard() {
             tone="primary"
             label="Total de Projetos"
             value={totals.total}
-            sub={`${totals.emAndamento} em andamento`}
+            sub={`${totals.emAndamento} EM ANDAMENTO`}
             icon={<Target className="h-5 w-5" />}
           />
           <Kpi
