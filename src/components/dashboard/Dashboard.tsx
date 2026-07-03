@@ -70,6 +70,7 @@ import {
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
 import { FinanceiroTable } from "./FinanceiroTable";
+import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
 
 const ALL = "__all__";
 
@@ -974,6 +975,7 @@ export default function Dashboard() {
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
             <TabsTrigger value="pessoas">Pessoas</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="painel-roi">Painel Estratégico de ROI</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
@@ -1302,12 +1304,17 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* PERFORMANCE */}
+          <TabsContent value="painel-roi" className="mt-4 space-y-4">
+            <PainelEstrategicoROI projetos={projetos} />
+          </TabsContent>
+
           <TabsContent value="performance" className="mt-4 space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard title="Evolução Mensal" description="Projetos iniciados vs concluídos">
                 <ChartWrap>
                   <LineChart data={evolucao}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+
                     <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} />
                     <Tooltip contentStyle={tooltipStyle} />
