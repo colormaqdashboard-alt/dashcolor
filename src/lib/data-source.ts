@@ -141,15 +141,17 @@ function buildProjetos(rows: unknown[][]): Projeto[] {
       matricula: 0, projeto: "", tipo: null, setor: null, lider: null, gerente: null,
       fase1: null, fase2: null, fase3: null, fase3_1: null, fase3_2: null, fase3_2_compras: null,
       fase4: null, fase5: null, desperdicio: null, saving_previsto: null, saving_aprovado: null,
-      investimento: null, memorial: null, proxima_acao: null, responsavel_acao: null,
+      investimento: null, investimento_raw: null, memorial: null, proxima_acao: null, responsavel_acao: null,
       prazo_acao: null, status: null, observacao: null, ultima_atualizacao: null, evidencia: null,
     };
     for (const m of FIELD_MATCHERS) {
       const idx = map[m.key];
       if (idx == null) continue;
       const v = row[idx];
-      if (m.key === "investimento") (p as any).investimento = toInvestimento(v);
-      else if (NUMBER_FIELDS.has(m.key)) (p as any)[m.key] = toNumber(v);
+      if (m.key === "investimento") {
+        (p as any).investimento = toInvestimento(v);
+        (p as any).investimento_raw = toStr(v);
+      } else if (NUMBER_FIELDS.has(m.key)) (p as any)[m.key] = toNumber(v);
       else if (DATE_FIELDS.has(m.key)) (p as any)[m.key] = toDateISO(v);
       else (p as any)[m.key] = toStr(v);
     }
