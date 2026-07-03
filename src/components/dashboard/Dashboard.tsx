@@ -70,6 +70,7 @@ import {
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
 import { FinanceiroTable } from "./FinanceiroTable";
+import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
 
 const ALL = "__all__";
 
@@ -974,6 +975,7 @@ export default function Dashboard() {
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
             <TabsTrigger value="pessoas">Pessoas</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="painel-roi">Painel Estratégico de ROI</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
