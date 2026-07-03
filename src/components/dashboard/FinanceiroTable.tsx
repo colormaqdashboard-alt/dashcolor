@@ -278,13 +278,13 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
       case "roiPrev":
         return (
           <TableCell className={`text-right text-sm tabular-nums ${paybackToneClass(r.roiPrev)}`}>
-            {fmtPayback(r.roiPrev)}
+            {isLevantamento(r.p.investimento_raw) ? "-" : fmtPayback(r.roiPrev)}
           </TableCell>
         );
       case "roiVal":
         return (
           <TableCell className={`text-right text-sm tabular-nums ${paybackToneClass(r.roiVal)}`}>
-            {fmtPayback(r.roiVal)}
+            {isLevantamento(r.p.investimento_raw) ? "-" : fmtPayback(r.roiVal)}
           </TableCell>
         );
       case "status":
