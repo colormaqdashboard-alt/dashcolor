@@ -19,6 +19,7 @@ export type Projeto = {
   saving_previsto: number | null;
   saving_aprovado: number | null;
   investimento: number | null;
+  investimento_raw: string | null;
   memorial: string | null;
   proxima_acao: string | null;
   responsavel_acao: string | null;
