@@ -1310,6 +1310,7 @@ export default function Dashboard() {
                 <ChartWrap>
                   <LineChart data={evolucao}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+
                     <XAxis dataKey="mes" stroke="var(--muted-foreground)" fontSize={11} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={11} />
                     <Tooltip contentStyle={tooltipStyle} />
