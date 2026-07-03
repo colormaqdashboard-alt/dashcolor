@@ -265,7 +265,9 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
         return <TableCell className="text-sm">{r.p.gerente || "—"}</TableCell>;
       case "investimento":
         return (
-          <TableCell className="text-right text-sm tabular-nums">{fmtMoney(r.investimento)}</TableCell>
+          <TableCell className="text-right text-sm tabular-nums">
+            {isLevantamento(r.p.investimento_raw) ? "-" : fmtMoney(r.investimento)}
+          </TableCell>
         );
       case "savingPrev":
         return (
