@@ -153,19 +153,23 @@ export function FinanceiroTable({ projetos }: { projetos: EnrichedProjeto[] }) {
     setOverKey(null);
   };
 
+  const isLevantamento = (raw: string | null | undefined) =>
+    (raw || "").trim().toLowerCase() === "fazer levantamento";
+
   const rows = useMemo<Row[]>(
     () =>
       projetos.map((p) => {
         const investimento = Number(p.investimento) || 0;
         const savingPrev = Number(p.saving_previsto) || 0;
         const savingVal = p.savingAprovadoEfetivo;
+        const levantamento = isLevantamento(p.investimento_raw);
         return {
           p,
           investimento,
           savingPrev,
           savingVal,
-          roiPrev: computePayback(investimento, savingPrev),
-          roiVal: computePaybackValidado(investimento, savingVal, savingPrev),
+          roiPrev: levantamento ? null : computePayback(investimento, savingPrev),
+          roiVal: levantamento ? null : computePaybackValidado(investimento, savingVal, savingPrev),
         };
       }),
     [projetos],
