@@ -1304,6 +1304,10 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* PERFORMANCE */}
+          <TabsContent value="painel-roi" className="mt-4 space-y-4">
+            <PainelEstrategicoROI projetos={projetos} />
+          </TabsContent>
+
           <TabsContent value="performance" className="mt-4 space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard title="Evolução Mensal" description="Projetos iniciados vs concluídos">
