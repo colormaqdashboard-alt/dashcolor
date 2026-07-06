@@ -1036,6 +1036,7 @@ export default function Dashboard() {
             </div>
           )}
         </SectionCard>
+        )}
 
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
