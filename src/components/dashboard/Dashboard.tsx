@@ -885,53 +885,77 @@ export default function Dashboard() {
           </div>
         </SectionCard>
 
+        {/* Toggles de exibição */}
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card px-4 py-3 shadow-[var(--shadow-card)]">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="toggle-indicators"
+              checked={showIndicators}
+              onCheckedChange={toggleShowIndicators}
+            />
+            <Label htmlFor="toggle-indicators" className="text-sm cursor-pointer">
+              Exibir Indicadores
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="toggle-meta-gerente"
+              checked={showMetaGerente}
+              onCheckedChange={toggleShowMetaGerente}
+            />
+            <Label htmlFor="toggle-meta-gerente" className="text-sm cursor-pointer">
+              Exibir Meta por Gerente
+            </Label>
+          </div>
+        </div>
+
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <Kpi
-            tone="primary"
-            label="Total de Projetos"
-            value={totals.total}
-            sub={`${totals.emAndamento} EM ANDAMENTO`}
-            icon={<Target className="h-5 w-5" />}
-          />
-          <Kpi
-            tone="success"
-            label="Validados pela Controladoria"
-            value={totals.validados}
-            sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
-            icon={<CheckCircle2 className="h-5 w-5" />}
-            className="text-black [&_*]:text-black"
-          />
-          <Kpi
-            label="Conclusão Média"
-            value={fmtPct(totals.pctMedio)}
-            sub={`${totals.finalizados} na Fase 5+`}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          <Kpi
-            label="Saving Previsto (12 meses)"
-            value={fmtMoney(totals.savingPrev)}
-            sub="Coluna P · todos os projetos"
-            icon={<DollarSign className="h-5 w-5" />}
-          />
-          <Kpi
-            label="Saving Aprovado pela Controladoria"
-            value={fmtMoney(totals.savingAprov)}
-            sub='Coluna Q · apenas status "Validado pela controladoria"'
-            icon={<CheckCircle2 className="h-5 w-5" />}
-          />
-        </div>
+        {showIndicators && (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <Kpi
+              tone="primary"
+              label="Total de Projetos"
+              value={totals.total}
+              sub={`${totals.emAndamento} EM ANDAMENTO`}
+              icon={<Target className="h-5 w-5" />}
+            />
+            <Kpi
+              tone="success"
+              label="Validados pela Controladoria"
+              value={totals.validados}
+              sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
+              icon={<CheckCircle2 className="h-5 w-5" />}
+              className="text-black [&_*]:text-black"
+            />
+            <Kpi
+              label="Conclusão Média"
+              value={fmtPct(totals.pctMedio)}
+              sub={`${totals.finalizados} na Fase 5+`}
+              icon={<TrendingUp className="h-5 w-5" />}
+            />
+            <Kpi
+              label="Saving Previsto (12 meses)"
+              value={fmtMoney(totals.savingPrev)}
+              sub="Coluna P · todos os projetos"
+              icon={<DollarSign className="h-5 w-5" />}
+            />
+            <Kpi
+              label="Saving Aprovado pela Controladoria"
+              value={fmtMoney(totals.savingAprov)}
+              sub='Coluna Q · apenas status "Validado pela controladoria"'
+              icon={<CheckCircle2 className="h-5 w-5" />}
+            />
+            <Kpi
+              tone="info"
+              label="Tempo Médio de Projeto"
+              value={`${Math.round(prazo.tempoMedio)} d`}
+              sub="Média de lead time"
+              icon={<Clock className="h-5 w-5" />}
+            />
+          </div>
+        )}
 
-        {/* Time KPIs */}
-        <div className="grid grid-cols-1 gap-3">
-          <Kpi
-            tone="info"
-            label="Tempo Médio de Projeto"
-            value={`${Math.round(prazo.tempoMedio)} d`}
-            icon={<Clock className="h-5 w-5" />}
-          />
-        </div>
-
+        {showMetaGerente && (
         <SectionCard
           title="Meta por Gerente"
           description="Realizado (Projetos!Q) vs Meta (EQUIPE!F) — valores sem limite de magnitude"
