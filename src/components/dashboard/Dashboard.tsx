@@ -287,6 +287,39 @@ export default function Dashboard() {
     }
   };
 
+  const [showIndicators, setShowIndicators] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("dashboard.showIndicators") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowIndicators = (v: boolean) => {
+    setShowIndicators(v);
+    try {
+      window.localStorage.setItem("dashboard.showIndicators", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
+  const [showMetaGerente, setShowMetaGerente] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("dashboard.showMetaGerente") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowMetaGerente = (v: boolean) => {
+    setShowMetaGerente(v);
+    try {
+      window.localStorage.setItem("dashboard.showMetaGerente", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
+
   const statusOpts = useMemo(() => uniq(all.map((p) => p.status)), [all]);
   const faseOpts = useMemo(() => uniq(all.map((p) => p.faseAtual)), [all]);
   const liderOpts = useMemo(() => uniq(all.map((p) => p.lider)).sort(), [all]);
@@ -629,48 +662,58 @@ export default function Dashboard() {
         }
         const status = (p.status || "").trim();
         const low = status.toLowerCase();
+        // Nova lógica da coluna "Atenção" (ordem obrigatória):
+        // 1) Validado pela controladoria  → ⚪ Validado (cinza)
+        // 2) Inviabilizado (ou Reprovado) → ⚫ Inviabilizado (preto)
+        // 3) Prazo (V) < hoje             → 🔴 Atrasado
+        // 4) Prazo - Última atualização > 90 dias → 🔵 Longa duração
+        // 5) Dias desde a última atualização:
+        //    0–7 🟢 Em dia · 8–15 🟡 Atenção · >15 🟠 Sem atualização
         let atencao = {
           label: "🟢 Em dia",
           bg: "bg-success",
           text: "text-black",
           order: 99,
         };
-        if (hasBlackStatusTreatment(status)) {
-          atencao = { label: `⚫ ${status}`, bg: "bg-black", text: "text-white", order: 6 };
-        } else if (low === "validado pela controladoria") {
+        if (low === "validado pela controladoria") {
           atencao = {
-            label: "⚪ Validado pela controladoria",
+            label: "⚪ Validado",
             bg: "bg-gray-400",
             text: "text-black",
             order: 5,
           };
-        } else if (low === "atrasado") {
+        } else if (hasBlackStatusTreatment(status)) {
+          atencao = { label: "⚫ Inviabilizado", bg: "bg-black", text: "text-white", order: 6 };
+        } else if (prazo && prazo.getTime() < today.getTime()) {
           atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
         } else if (
-          low === "coletando dados" &&
-          ultimaAtualizacao &&
           prazo &&
-          (ultimaAtualizacao.getTime() - prazo.getTime()) / DAY > 60
+          ultimaAtualizacao &&
+          (prazo.getTime() - ultimaAtualizacao.getTime()) / DAY > 90
         ) {
           atencao = {
-            label: "🔵 Projeto de longa execução",
+            label: "🔵 Longa duração",
             bg: "bg-blue-600",
             text: "text-white",
             order: 1,
           };
-        } else if (ultimaFase) {
-          const d = (today.getTime() - ultimaFase.getTime()) / DAY;
-          if (d > 60) {
-            atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
-          } else if (d >= 22) {
+        } else if (diasAtualizacao != null) {
+          if (diasAtualizacao > 15) {
             atencao = {
-              label: "🟡 Possível atraso",
-              bg: "bg-warning",
-              text: "text-black",
+              label: "🟠 Sem atualização",
+              bg: "bg-orange-500",
+              text: "text-white",
               order: 2,
             };
-          } else if (d >= 0) {
-            atencao = { label: "🟢 Em dia", bg: "bg-success", text: "text-black", order: 3 };
+          } else if (diasAtualizacao >= 8) {
+            atencao = {
+              label: "🟡 Atenção",
+              bg: "bg-warning",
+              text: "text-black",
+              order: 3,
+            };
+          } else {
+            atencao = { label: "🟢 Em dia", bg: "bg-success", text: "text-black", order: 4 };
           }
         }
         const tempoFase = ultimaFase
@@ -842,53 +885,77 @@ export default function Dashboard() {
           </div>
         </SectionCard>
 
+        {/* Toggles de exibição */}
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card px-4 py-3 shadow-[var(--shadow-card)]">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="toggle-indicators"
+              checked={showIndicators}
+              onCheckedChange={toggleShowIndicators}
+            />
+            <Label htmlFor="toggle-indicators" className="text-sm cursor-pointer">
+              Exibir Indicadores
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="toggle-meta-gerente"
+              checked={showMetaGerente}
+              onCheckedChange={toggleShowMetaGerente}
+            />
+            <Label htmlFor="toggle-meta-gerente" className="text-sm cursor-pointer">
+              Exibir Meta por Gerente
+            </Label>
+          </div>
+        </div>
+
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <Kpi
-            tone="primary"
-            label="Total de Projetos"
-            value={totals.total}
-            sub={`${totals.emAndamento} EM ANDAMENTO`}
-            icon={<Target className="h-5 w-5" />}
-          />
-          <Kpi
-            tone="success"
-            label="Validados pela Controladoria"
-            value={totals.validados}
-            sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
-            icon={<CheckCircle2 className="h-5 w-5" />}
-            className="text-black [&_*]:text-black"
-          />
-          <Kpi
-            label="Conclusão Média"
-            value={fmtPct(totals.pctMedio)}
-            sub={`${totals.finalizados} na Fase 5+`}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          <Kpi
-            label="Saving Previsto (12 meses)"
-            value={fmtMoney(totals.savingPrev)}
-            sub="Coluna P · todos os projetos"
-            icon={<DollarSign className="h-5 w-5" />}
-          />
-          <Kpi
-            label="Saving Aprovado pela Controladoria"
-            value={fmtMoney(totals.savingAprov)}
-            sub='Coluna Q · apenas status "Validado pela controladoria"'
-            icon={<CheckCircle2 className="h-5 w-5" />}
-          />
-        </div>
+        {showIndicators && (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <Kpi
+              tone="primary"
+              label="Total de Projetos"
+              value={totals.total}
+              sub={`${totals.emAndamento} EM ANDAMENTO`}
+              icon={<Target className="h-5 w-5" />}
+            />
+            <Kpi
+              tone="success"
+              label="Validados pela Controladoria"
+              value={totals.validados}
+              sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
+              icon={<CheckCircle2 className="h-5 w-5" />}
+              className="text-black [&_*]:text-black"
+            />
+            <Kpi
+              label="Conclusão Média"
+              value={fmtPct(totals.pctMedio)}
+              sub={`${totals.finalizados} na Fase 5+`}
+              icon={<TrendingUp className="h-5 w-5" />}
+            />
+            <Kpi
+              label="Saving Previsto (12 meses)"
+              value={fmtMoney(totals.savingPrev)}
+              sub="Coluna P · todos os projetos"
+              icon={<DollarSign className="h-5 w-5" />}
+            />
+            <Kpi
+              label="Saving Aprovado pela Controladoria"
+              value={fmtMoney(totals.savingAprov)}
+              sub='Coluna Q · apenas status "Validado pela controladoria"'
+              icon={<CheckCircle2 className="h-5 w-5" />}
+            />
+            <Kpi
+              tone="info"
+              label="Tempo Médio de Projeto"
+              value={`${Math.round(prazo.tempoMedio)} d`}
+              sub="Média de lead time"
+              icon={<Clock className="h-5 w-5" />}
+            />
+          </div>
+        )}
 
-        {/* Time KPIs */}
-        <div className="grid grid-cols-1 gap-3">
-          <Kpi
-            tone="info"
-            label="Tempo Médio de Projeto"
-            value={`${Math.round(prazo.tempoMedio)} d`}
-            icon={<Clock className="h-5 w-5" />}
-          />
-        </div>
-
+        {showMetaGerente && (
         <SectionCard
           title="Meta por Gerente"
           description="Realizado (Projetos!Q) vs Meta (EQUIPE!F) — valores sem limite de magnitude"
@@ -969,6 +1036,7 @@ export default function Dashboard() {
             </div>
           )}
         </SectionCard>
+        )}
 
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
