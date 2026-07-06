@@ -1102,7 +1102,7 @@ export default function Dashboard() {
             >
               <div className="max-h-[480px] overflow-auto rounded-md border">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-card">
+                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
                       <TableHead>Projeto</TableHead>
                       <TableHead>Líder</TableHead>
@@ -1185,9 +1185,9 @@ export default function Dashboard() {
               </SectionCard>
             </div>
             <SectionCard title="Projetos por Setor / Filial">
-              <div className="overflow-auto rounded-md border">
+              <div className="overflow-x-auto rounded-md border">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
                       <TableHead>Setor</TableHead>
                       <TableHead className="text-right">Projetos</TableHead>
@@ -1479,7 +1479,7 @@ export default function Dashboard() {
               </div>
               <div className="max-h-[640px] overflow-auto rounded-md border">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-card">
+                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
                       <TableHead>Projeto</TableHead>
                       <TableHead>Líder</TableHead>
@@ -1542,7 +1542,7 @@ export default function Dashboard() {
             <SectionCard title="Lista de Projetos" description={`${projetos.length} projetos filtrados`}>
               <div className="max-h-[640px] overflow-auto rounded-md border">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-card">
+                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
                       <TableHead>Projeto</TableHead>
                       <TableHead>Tipo</TableHead>
@@ -1728,9 +1728,9 @@ function RankingTable({
 }) {
   return (
     <SectionCard title={title} description={`${rows.length} projeto(s)`}>
-      <div className="overflow-auto rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
             <TableRow>
               <TableHead className="w-10 text-right">#</TableHead>
               <TableHead>Projeto (Col B)</TableHead>
