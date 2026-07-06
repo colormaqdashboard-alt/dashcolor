@@ -629,48 +629,58 @@ export default function Dashboard() {
         }
         const status = (p.status || "").trim();
         const low = status.toLowerCase();
+        // Nova lógica da coluna "Atenção" (ordem obrigatória):
+        // 1) Validado pela controladoria  → ⚪ Validado (cinza)
+        // 2) Inviabilizado (ou Reprovado) → ⚫ Inviabilizado (preto)
+        // 3) Prazo (V) < hoje             → 🔴 Atrasado
+        // 4) Prazo - Última atualização > 90 dias → 🔵 Longa duração
+        // 5) Dias desde a última atualização:
+        //    0–7 🟢 Em dia · 8–15 🟡 Atenção · >15 🟠 Sem atualização
         let atencao = {
           label: "🟢 Em dia",
           bg: "bg-success",
           text: "text-black",
           order: 99,
         };
-        if (hasBlackStatusTreatment(status)) {
-          atencao = { label: `⚫ ${status}`, bg: "bg-black", text: "text-white", order: 6 };
-        } else if (low === "validado pela controladoria") {
+        if (low === "validado pela controladoria") {
           atencao = {
-            label: "⚪ Validado pela controladoria",
+            label: "⚪ Validado",
             bg: "bg-gray-400",
             text: "text-black",
             order: 5,
           };
-        } else if (low === "atrasado") {
+        } else if (hasBlackStatusTreatment(status)) {
+          atencao = { label: "⚫ Inviabilizado", bg: "bg-black", text: "text-white", order: 6 };
+        } else if (prazo && prazo.getTime() < today.getTime()) {
           atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
         } else if (
-          low === "coletando dados" &&
-          ultimaAtualizacao &&
           prazo &&
-          (ultimaAtualizacao.getTime() - prazo.getTime()) / DAY > 60
+          ultimaAtualizacao &&
+          (prazo.getTime() - ultimaAtualizacao.getTime()) / DAY > 90
         ) {
           atencao = {
-            label: "🔵 Projeto de longa execução",
+            label: "🔵 Longa duração",
             bg: "bg-blue-600",
             text: "text-white",
             order: 1,
           };
-        } else if (ultimaFase) {
-          const d = (today.getTime() - ultimaFase.getTime()) / DAY;
-          if (d > 60) {
-            atencao = { label: "🔴 Atrasado", bg: "bg-destructive", text: "text-white", order: 0 };
-          } else if (d >= 22) {
+        } else if (diasAtualizacao != null) {
+          if (diasAtualizacao > 15) {
             atencao = {
-              label: "🟡 Possível atraso",
-              bg: "bg-warning",
-              text: "text-black",
+              label: "🟠 Sem atualização",
+              bg: "bg-orange-500",
+              text: "text-white",
               order: 2,
             };
-          } else if (d >= 0) {
-            atencao = { label: "🟢 Em dia", bg: "bg-success", text: "text-black", order: 3 };
+          } else if (diasAtualizacao >= 8) {
+            atencao = {
+              label: "🟡 Atenção",
+              bg: "bg-warning",
+              text: "text-black",
+              order: 3,
+            };
+          } else {
+            atencao = { label: "🟢 Em dia", bg: "bg-success", text: "text-black", order: 4 };
           }
         }
         const tempoFase = ultimaFase
