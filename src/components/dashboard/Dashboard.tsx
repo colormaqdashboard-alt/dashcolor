@@ -1185,9 +1185,9 @@ export default function Dashboard() {
               </SectionCard>
             </div>
             <SectionCard title="Projetos por Setor / Filial">
-              <div className="overflow-auto rounded-md border">
+              <div className="overflow-x-auto rounded-md border">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
                       <TableHead>Setor</TableHead>
                       <TableHead className="text-right">Projetos</TableHead>
@@ -1728,9 +1728,9 @@ function RankingTable({
 }) {
   return (
     <SectionCard title={title} description={`${rows.length} projeto(s)`}>
-      <div className="overflow-auto rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
             <TableRow>
               <TableHead className="w-10 text-right">#</TableHead>
               <TableHead>Projeto (Col B)</TableHead>
