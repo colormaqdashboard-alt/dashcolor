@@ -287,6 +287,39 @@ export default function Dashboard() {
     }
   };
 
+  const [showIndicators, setShowIndicators] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("dashboard.showIndicators") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowIndicators = (v: boolean) => {
+    setShowIndicators(v);
+    try {
+      window.localStorage.setItem("dashboard.showIndicators", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
+  const [showMetaGerente, setShowMetaGerente] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("dashboard.showMetaGerente") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowMetaGerente = (v: boolean) => {
+    setShowMetaGerente(v);
+    try {
+      window.localStorage.setItem("dashboard.showMetaGerente", String(v));
+    } catch {
+      /* ignore */
+    }
+  };
+
   const statusOpts = useMemo(() => uniq(all.map((p) => p.status)), [all]);
   const faseOpts = useMemo(() => uniq(all.map((p) => p.faseAtual)), [all]);
   const liderOpts = useMemo(() => uniq(all.map((p) => p.lider)).sort(), [all]);
