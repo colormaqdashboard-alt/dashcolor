@@ -1425,9 +1425,9 @@ export default function Dashboard() {
 
           {/* RANKING DE PROJETOS */}
           <TabsContent value="ranking" className="mt-4 space-y-4">
-            <RankingTable title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
-            <RankingTable title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
-            <RankingTable title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
+            <RankingTable kind="prev" title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
+            <RankingTable kind="aprov" title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
+            <RankingTable kind="invest" title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
           </TabsContent>
 
           {/* STATUS DOS PROJETOS */}
