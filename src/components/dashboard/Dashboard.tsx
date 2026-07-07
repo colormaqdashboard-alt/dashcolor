@@ -1720,14 +1720,29 @@ function RankingTable({
   rows,
   metricKey,
   metricLabel,
+  kind,
 }: {
   title: string;
   rows: EnrichedProjeto[];
   metricKey: "saving_previsto" | "savingAprovadoEfetivo" | "investimento";
   metricLabel: string;
+  kind: RankingKind;
 }) {
   return (
-    <SectionCard title={title} description={`${rows.length} projeto(s)`}>
+    <SectionCard
+      title={title}
+      description={`${rows.length} projeto(s)`}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => exportRankingXLSX(kind, rows)}>
+            <FileSpreadsheet className="h-4 w-4" /> Exportar XLSX
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => exportRankingHTML(kind, rows)}>
+            <FileCode2 className="h-4 w-4" /> Exportar HTML
+          </Button>
+        </div>
+      }
+    >
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
