@@ -45,6 +45,7 @@ import {
   DollarSign,
   Filter,
   FileSpreadsheet,
+  FileCode2,
   Link2,
   RefreshCw,
   RotateCcw,
@@ -63,6 +64,11 @@ import {
   type Projeto,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
+import {
+  exportRankingXLSX,
+  exportRankingHTML,
+  type RankingKind,
+} from "@/lib/ranking-export";
 import {
   loadFromGoogleSheets,
   type DashboardData,
