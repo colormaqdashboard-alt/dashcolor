@@ -45,6 +45,7 @@ import {
   DollarSign,
   Filter,
   FileSpreadsheet,
+  FileCode2,
   Link2,
   RefreshCw,
   RotateCcw,
@@ -63,6 +64,11 @@ import {
   type Projeto,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
+import {
+  exportRankingXLSX,
+  exportRankingHTML,
+  type RankingKind,
+} from "@/lib/ranking-export";
 import {
   loadFromGoogleSheets,
   type DashboardData,
@@ -1425,9 +1431,9 @@ export default function Dashboard() {
 
           {/* RANKING DE PROJETOS */}
           <TabsContent value="ranking" className="mt-4 space-y-4">
-            <RankingTable title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
-            <RankingTable title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
-            <RankingTable title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
+            <RankingTable kind="prev" title="Top 20 — Saving Previsto (Coluna P)" rows={rankSavingPrev} metricKey="saving_previsto" metricLabel="Saving Previsto" />
+            <RankingTable kind="aprov" title="Top 20 — Saving Aprovado (Coluna Q, validados pela Controladoria)" rows={rankSavingAprov} metricKey="savingAprovadoEfetivo" metricLabel="Saving Aprovado" />
+            <RankingTable kind="invest" title="Top 20 — Investimento (Coluna R)" rows={rankInvest} metricKey="investimento" metricLabel="Investimento" />
           </TabsContent>
 
           {/* STATUS DOS PROJETOS */}
@@ -1720,14 +1726,29 @@ function RankingTable({
   rows,
   metricKey,
   metricLabel,
+  kind,
 }: {
   title: string;
   rows: EnrichedProjeto[];
   metricKey: "saving_previsto" | "savingAprovadoEfetivo" | "investimento";
   metricLabel: string;
+  kind: RankingKind;
 }) {
   return (
-    <SectionCard title={title} description={`${rows.length} projeto(s)`}>
+    <SectionCard
+      title={title}
+      description={`${rows.length} projeto(s)`}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => exportRankingXLSX(kind, rows)}>
+            <FileSpreadsheet className="h-4 w-4" /> Exportar XLSX
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2" onClick={() => exportRankingHTML(kind, rows)}>
+            <FileCode2 className="h-4 w-4" /> Exportar HTML
+          </Button>
+        </div>
+      }
+    >
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
