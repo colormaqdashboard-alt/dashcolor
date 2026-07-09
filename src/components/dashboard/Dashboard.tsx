@@ -1189,6 +1189,75 @@ export default function Dashboard() {
                 </Table>
               </div>
             </SectionCard>
+
+            <SectionCard
+              title="Personalização do Relatório HTML"
+              description="Configure o logotipo exibido no cabeçalho do relatório. A imagem é salva automaticamente e incorporada (Base64) em cada relatório gerado."
+            >
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-20 w-40 items-center justify-center rounded-md border bg-muted/30">
+                  {reportLogo ? (
+                    <img
+                      src={reportLogo}
+                      alt="Logotipo do relatório"
+                      className="max-h-[60px] max-w-[150px] object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem logotipo</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="report-logo-input" className="text-sm">
+                    {reportLogo ? "Substituir logotipo" : "Enviar logotipo"} (PNG, JPG, JPEG, SVG)
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="report-logo-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                      onChange={(e) => handleLogoFile(e.target.files?.[0] ?? null)}
+                      className="max-w-xs"
+                    />
+                    {reportLogo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => saveReportLogo(null)}
+                      >
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Altura máxima ≈ 60px · Proporção preservada (object-fit: contain) · Persistido localmente.
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+
+            <StatusReportDialog
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+              logoDataUri={reportLogo}
+              rows={statusProjetos.map(
+                ({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }): StatusReportRow => ({
+                  matricula: p.matricula,
+                  projeto: p.projeto,
+                  lider: p.lider || "",
+                  gerente: p.gerente || "",
+                  faseAtualShort: faseAtual?.short || "",
+                  faseAtualFull: faseAtual?.full || "",
+                  ultimaFase,
+                  prazo,
+                  ultimaAtualizacao,
+                  diasFase,
+                  diasAtualizacao,
+                  status: p.status || "",
+                  atencaoLabel: atencao.label,
+                  atencaoOrder: atencao.order,
+                }),
+              )}
+            />
           </TabsContent>
 
           {/* PESSOAS */}
