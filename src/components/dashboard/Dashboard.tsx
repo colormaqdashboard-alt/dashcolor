@@ -1502,7 +1502,15 @@ export default function Dashboard() {
               title="Status dos Projetos"
               description="Painel gerencial para priorização — ordenado por nível de atenção e tempo na fase atual"
             >
-              <div className="mb-3 flex items-center justify-end gap-2">
+              <div className="mb-3 flex flex-wrap items-center justify-end gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setReportOpen(true)}
+                >
+                  <FileCode2 className="mr-2 h-4 w-4" />
+                  Gerar Relatório HTML
+                </Button>
                 <Label htmlFor="toggle-atencao" className="text-sm text-muted-foreground cursor-pointer">
                   Exibir coluna Atenção
                 </Label>
