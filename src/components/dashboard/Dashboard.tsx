@@ -295,6 +295,33 @@ export default function Dashboard() {
     }
   };
 
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportLogo, setReportLogo] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem("statusReport.logoDataUri");
+    } catch {
+      return null;
+    }
+  });
+  const saveReportLogo = (v: string | null) => {
+    setReportLogo(v);
+    try {
+      if (v) window.localStorage.setItem("statusReport.logoDataUri", v);
+      else window.localStorage.removeItem("statusReport.logoDataUri");
+    } catch {
+      /* ignore */
+    }
+  };
+  const handleLogoFile = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") saveReportLogo(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [showIndicators, setShowIndicators] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
