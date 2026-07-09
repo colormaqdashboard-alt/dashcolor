@@ -77,6 +77,8 @@ import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
 import { FinanceiroTable } from "./FinanceiroTable";
 import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
+import { StatusReportDialog } from "./StatusReportDialog";
+import type { StatusReportRow } from "@/lib/status-report";
 
 const ALL = "__all__";
 
@@ -291,6 +293,33 @@ export default function Dashboard() {
     } catch {
       /* ignore */
     }
+  };
+
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportLogo, setReportLogo] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem("statusReport.logoDataUri");
+    } catch {
+      return null;
+    }
+  });
+  const saveReportLogo = (v: string | null) => {
+    setReportLogo(v);
+    try {
+      if (v) window.localStorage.setItem("statusReport.logoDataUri", v);
+      else window.localStorage.removeItem("statusReport.logoDataUri");
+    } catch {
+      /* ignore */
+    }
+  };
+  const handleLogoFile = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") saveReportLogo(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const [showIndicators, setShowIndicators] = useState<boolean>(() => {
@@ -1160,6 +1189,75 @@ export default function Dashboard() {
                 </Table>
               </div>
             </SectionCard>
+
+            <SectionCard
+              title="Personalização do Relatório HTML"
+              description="Configure o logotipo exibido no cabeçalho do relatório. A imagem é salva automaticamente e incorporada (Base64) em cada relatório gerado."
+            >
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-20 w-40 items-center justify-center rounded-md border bg-muted/30">
+                  {reportLogo ? (
+                    <img
+                      src={reportLogo}
+                      alt="Logotipo do relatório"
+                      className="max-h-[60px] max-w-[150px] object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem logotipo</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="report-logo-input" className="text-sm">
+                    {reportLogo ? "Substituir logotipo" : "Enviar logotipo"} (PNG, JPG, JPEG, SVG)
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="report-logo-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                      onChange={(e) => handleLogoFile(e.target.files?.[0] ?? null)}
+                      className="max-w-xs"
+                    />
+                    {reportLogo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => saveReportLogo(null)}
+                      >
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Altura máxima ≈ 60px · Proporção preservada (object-fit: contain) · Persistido localmente.
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+
+            <StatusReportDialog
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+              logoDataUri={reportLogo}
+              rows={statusProjetos.map(
+                ({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }): StatusReportRow => ({
+                  matricula: p.matricula,
+                  projeto: p.projeto,
+                  lider: p.lider || "",
+                  gerente: p.gerente || "",
+                  faseAtualShort: faseAtual?.short || "",
+                  faseAtualFull: faseAtual?.full || "",
+                  ultimaFase,
+                  prazo,
+                  ultimaAtualizacao,
+                  diasFase,
+                  diasAtualizacao,
+                  status: p.status || "",
+                  atencaoLabel: atencao.label,
+                  atencaoOrder: atencao.order,
+                }),
+              )}
+            />
           </TabsContent>
 
           {/* PESSOAS */}
@@ -1473,7 +1571,15 @@ export default function Dashboard() {
               title="Status dos Projetos"
               description="Painel gerencial para priorização — ordenado por nível de atenção e tempo na fase atual"
             >
-              <div className="mb-3 flex items-center justify-end gap-2">
+              <div className="mb-3 flex flex-wrap items-center justify-end gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setReportOpen(true)}
+                >
+                  <FileCode2 className="mr-2 h-4 w-4" />
+                  Gerar Relatório HTML
+                </Button>
                 <Label htmlFor="toggle-atencao" className="text-sm text-muted-foreground cursor-pointer">
                   Exibir coluna Atenção
                 </Label>
