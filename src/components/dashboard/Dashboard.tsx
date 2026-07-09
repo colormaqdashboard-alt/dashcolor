@@ -77,6 +77,8 @@ import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
 import { FinanceiroTable } from "./FinanceiroTable";
 import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
+import { StatusReportDialog } from "./StatusReportDialog";
+import type { StatusReportRow } from "@/lib/status-report";
 
 const ALL = "__all__";
 
