@@ -480,7 +480,7 @@ export function PerformanceExecutivoPanel({
                 }
               />
               <Tooltip
-                formatter={(v: number) => fmtMoney(Number(v))}
+                formatter={(v) => fmtMoney(Number(v))}
                 contentStyle={{
                   background: "var(--card)",
                   border: "1px solid var(--border)",
@@ -496,7 +496,7 @@ export function PerformanceExecutivoPanel({
                 <LabelList
                   dataKey="value"
                   position="top"
-                  formatter={(v: number) => fmtMoney(Number(v))}
+                  formatter={(v) => fmtMoney(Number(v))}
                   style={{ fontSize: 11, fill: "var(--foreground)" }}
                 />
               </Bar>
