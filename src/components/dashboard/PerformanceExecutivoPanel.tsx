@@ -51,6 +51,12 @@ import { cn } from "@/lib/utils";
 
 const ALL = "__all__";
 const META_TOTAL_FIXO = 8_000_000;
+const INACTIVE_STATUS = new Set([
+  "inviabilizado",
+  "reprovado pela controladoria",
+]);
+const isActive = (status?: string | null) =>
+  !INACTIVE_STATUS.has((status || "").trim().toLowerCase());
 
 type Props = {
   all: EnrichedProjeto[];
@@ -138,6 +144,7 @@ export function PerformanceExecutivoPanel({
   const totals = useMemo(() => {
     const gerentes = uniq(projetos.map((p) => p.gerente)).length;
     const lideres = uniq(projetos.map((p) => p.lider)).length;
+    const ativos = projetos.filter((p) => isActive(p.status));
     const savingPrev = projetos.reduce(
       (s, p) => s + (Number(p.saving_previsto) || 0),
       0,
@@ -149,7 +156,7 @@ export function PerformanceExecutivoPanel({
     return {
       gerentes,
       lideres,
-      projetos: projetos.length,
+      projetos: ativos.length,
       savingPrev,
       savingAprov,
     };
@@ -168,19 +175,27 @@ export function PerformanceExecutivoPanel({
   const faltaMeta = Math.max(0, metaGerencial - totals.savingAprov);
   const pctClamped = Math.min(1, Math.max(0, pctMeta));
 
-  const comparativo = [
-    { name: "Meta Gerencial", value: metaGerencial, fill: "var(--chart-1)" },
-    {
-      name: "Saving Previsto (12 meses)",
-      value: totals.savingPrev,
-      fill: "var(--chart-4)",
-    },
-    {
-      name: "Saving Aprovado pela Controladoria",
-      value: totals.savingAprov,
-      fill: "var(--chart-2)",
-    },
-  ];
+  const comparativo = useMemo(() => {
+    const metaByGerente = new Map<string, number>();
+    (metas || []).forEach((m) => {
+      const g = (m.gerente || "").trim();
+      if (!g) return;
+      metaByGerente.set(g, (metaByGerente.get(g) || 0) + (Number(m.meta) || 0));
+    });
+    const gerentesAtivos =
+      fGerente === ALL
+        ? uniq(projetos.map((p) => (p.gerente || "").trim())).filter(Boolean).sort()
+        : [fGerente];
+    return gerentesAtivos.map((g) => {
+      const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
+      return {
+        name: g,
+        previsto: lista.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0),
+        aprovado: lista.reduce((s, p) => s + p.savingAprovadoEfetivo, 0),
+        meta: metaByGerente.get(g) || 0,
+      };
+    });
+  }, [projetos, metas, fGerente]);
 
   const top5 = useMemo(
     () =>
@@ -323,37 +338,37 @@ export function PerformanceExecutivoPanel({
       </SectionCard>
 
       {/* Linha 2 — Cards principais */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-        <IconCard
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-7">
+        <div className="lg:col-span-1"><IconCard
           icon={<Users className="h-6 w-6" />}
           iconBg="bg-sky-500"
           label="Gerentes"
           value={totals.gerentes}
-        />
-        <IconCard
+        /></div>
+        <div className="lg:col-span-1"><IconCard
           icon={<UserCircle2 className="h-6 w-6" />}
           iconBg="bg-emerald-500"
           label="Líderes"
           value={totals.lideres}
-        />
-        <IconCard
+        /></div>
+        <div className="lg:col-span-1"><IconCard
           icon={<FolderKanban className="h-6 w-6" />}
           iconBg="bg-violet-500"
           label="Projetos"
           value={totals.projetos}
-        />
-        <IconCard
+        /></div>
+        <div className="lg:col-span-2"><IconCard
           icon={<DollarSign className="h-6 w-6" />}
           iconBg="bg-amber-500"
           label="Saving Previsto (12 meses)"
           value={fmtMoney(totals.savingPrev)}
-        />
-        <IconCard
+        /></div>
+        <div className="lg:col-span-2"><IconCard
           icon={<ShieldCheck className="h-6 w-6" />}
           iconBg="bg-green-600"
           label="Saving Aprovado pela Controladoria"
           value={fmtMoney(totals.savingAprov)}
-        />
+        /></div>
       </div>
 
       {/* Linha 3 — Indicadores Estratégicos */}
