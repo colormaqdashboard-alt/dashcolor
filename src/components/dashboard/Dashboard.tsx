@@ -1482,6 +1482,13 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="performance" className="mt-4 space-y-4">
+            <PerformanceExecutivoPanel
+              all={all}
+              metas={source.metas || []}
+              updatedAt={source.updatedAt}
+              onRefresh={sheetUrl ? handleSyncSheet : undefined}
+              refreshing={loadingSource}
+            />
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard title="Evolução Mensal" description="Projetos iniciados vs concluídos">
                 <ChartWrap>
