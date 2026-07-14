@@ -504,17 +504,24 @@ export function PerformanceExecutivoPanel({
                 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="value" name="Valor" radius={[6, 6, 0, 0]}>
-                {comparativo.map((c, i) => (
-                  <Cell key={i} fill={c.fill} />
-                ))}
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={(v) => fmtMoney(Number(v))}
-                  style={{ fontSize: 11, fill: "var(--foreground)" }}
-                />
-              </Bar>
+              <Bar
+                dataKey="previsto"
+                name="Saving Previsto (12 meses)"
+                fill="#16a34a"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                dataKey="aprovado"
+                name="Saving Aprovado pela Controladoria"
+                fill="#2563eb"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                dataKey="meta"
+                name="Meta Gerencial"
+                fill="#dc2626"
+                radius={[6, 6, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
