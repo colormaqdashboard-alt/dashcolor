@@ -171,7 +171,7 @@ function RoiCell({ r }: { r: RowCalc }) {
   if (r.roi != null && !isFinite(r.roi))
     return (
       <span className="inline-flex items-center gap-1 font-semibold text-success">
-        <InfinityIcon className="h-4 w-4" /> Infinito
+        <InfinityIcon className="h-4 w-4" /> Imediato
       </span>
     );
   return <span className={paybackToneClass(r.roi)}>{fmtPayback(r.roi)}</span>;
@@ -380,7 +380,7 @@ function ManagerCard({
 
 function fmtPaybackPlain(years: number | null | undefined): string {
   if (years == null) return "-";
-  if (!isFinite(years)) return "Infinito";
+  if (!isFinite(years)) return "Imediato";
   return fmtPayback(years);
 }
 
@@ -597,6 +597,13 @@ function exportHTML(buckets: GerenteBucket[], cfgs: Record<string, CardConfig>) 
 
 export function PainelEstrategicoROI({ projetos }: { projetos: EnrichedProjeto[] }) {
   const buckets = useMemo(() => computeBuckets(projetos), [projetos]);
+  const reportBuckets = useMemo(
+    () =>
+      computeBuckets(
+        projetos.filter((p) => !hasBlackStatusTreatment(p.status || "")),
+      ),
+    [projetos],
+  );
   const [cfgs, setCfgs] = useState<Record<string, CardConfig>>({});
 
   // Garante configs default para novos gerentes sem recriar as existentes
@@ -614,6 +621,10 @@ export function PainelEstrategicoROI({ projetos }: { projetos: EnrichedProjeto[]
 
   const incluidosCount = buckets.filter((b) => effectiveCfgs[b.gerente]?.incluir).length;
 
+  // Buckets do relatório usam somente projetos ativos (exclui Inviabilizado / Reprovado pela Controladoria),
+  // mas preservam as configurações por gerente já definidas.
+  const reportCfgs = effectiveCfgs;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 shadow-[var(--shadow-card)]">
@@ -630,10 +641,10 @@ export function PainelEstrategicoROI({ projetos }: { projetos: EnrichedProjeto[]
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => exportXLSX(buckets, effectiveCfgs)}>
+            <DropdownMenuItem onClick={() => exportXLSX(reportBuckets, reportCfgs)}>
               <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (.xlsx)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => exportHTML(buckets, effectiveCfgs)}>
+            <DropdownMenuItem onClick={() => exportHTML(reportBuckets, reportCfgs)}>
               <FileCode2 className="mr-2 h-4 w-4" /> HTML
             </DropdownMenuItem>
           </DropdownMenuContent>
