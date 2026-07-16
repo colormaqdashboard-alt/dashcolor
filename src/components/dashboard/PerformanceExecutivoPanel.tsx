@@ -33,8 +33,13 @@ import {
   fmtMoney,
   fmtPct,
   uniq,
+  computePaybackValidado,
+  fmtPayback,
+  paybackToneClass,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
+import { Infinity as InfinityIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionCard } from "./SectionCard";
 import {
@@ -184,7 +189,7 @@ export function PerformanceExecutivoPanel({
       fGerente === ALL
         ? uniq(projetos.map((p) => (p.gerente || "").trim())).filter(Boolean).sort()
         : [fGerente];
-    return gerentesAtivos.map((g) => {
+    const rows = gerentesAtivos.map((g) => {
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
@@ -193,6 +198,14 @@ export function PerformanceExecutivoPanel({
         meta: metaByGerente.get(g) || 0,
       };
     });
+    // Ordenar por ordem de grandeza (maior para o menor), usando o maior entre
+    // saving previsto, saving aprovado e meta como critério de comparação.
+    rows.sort(
+      (a, b) =>
+        Math.max(b.previsto, b.aprovado, b.meta) -
+        Math.max(a.previsto, a.aprovado, a.meta),
+    );
+    return rows;
   }, [projetos, metas, fGerente]);
 
   const top5 = useMemo(
