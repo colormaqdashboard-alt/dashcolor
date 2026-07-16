@@ -383,7 +383,7 @@ export function PerformanceExecutivoPanel({
       </div>
 
       {/* Linha 3 — Indicadores Estratégicos */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-[var(--shadow-card)] lg:col-span-1 bg-sky-50/60 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white">
@@ -446,7 +446,7 @@ export function PerformanceExecutivoPanel({
           </CardContent>
         </Card>
 
-        <Card className="shadow-[var(--shadow-card)] lg:col-span-3 bg-card">
+        <Card className="shadow-[var(--shadow-card)] lg:col-span-1 bg-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs font-medium text-muted-foreground">
