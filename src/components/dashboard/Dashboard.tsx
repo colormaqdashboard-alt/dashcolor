@@ -1601,16 +1601,16 @@ export default function Dashboard() {
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
                     <TableRow>
-                      <TableHead>Projeto</TableHead>
-                      <TableHead>Líder</TableHead>
-                      <TableHead>Fase Atual</TableHead>
-                      <TableHead>Última fase iniciada</TableHead>
-                      <TableHead>Prazo da ação (V)</TableHead>
-                      <TableHead className="text-right">Dias corridos da fase</TableHead>
-                      <TableHead>Última atualização (Y)</TableHead>
-                      <TableHead className="text-right">Dias desde a última atualização</TableHead>
-                      <TableHead>Status (W)</TableHead>
-                      {showAtencao && <TableHead>Atenção</TableHead>}
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Projeto</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Líder</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Fase Atual</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Última fase iniciada</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Prazo da ação (V)</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight text-right">Dias corridos da fase</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Última atualização (Y)</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight text-right">Dias desde a última atualização</TableHead>
+                      <TableHead className="whitespace-normal align-bottom leading-tight">Status (W)</TableHead>
+                      {showAtencao && <TableHead className="whitespace-normal align-bottom leading-tight">Atenção</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
