@@ -549,18 +549,21 @@ export function PerformanceExecutivoPanel({
               <TableRow>
                 <TableHead className="w-20 text-center">Ranking</TableHead>
                 <TableHead>Projeto</TableHead>
-                <TableHead>Líder</TableHead>
-                <TableHead>Gerente</TableHead>
                 <TableHead className="text-right">
                   Previsão de Saving (12 meses)
                 </TableHead>
+                <TableHead className="text-right">Investimento</TableHead>
+                <TableHead className="text-right">ROI</TableHead>
+                <TableHead>Gerente</TableHead>
+                <TableHead>Líder</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {top5.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={8}
                     className="text-center text-sm text-muted-foreground"
                   >
                     Nenhum projeto encontrado com os filtros atuais.
@@ -576,6 +579,17 @@ export function PerformanceExecutivoPanel({
                         : i === 2
                           ? "bg-orange-400 text-orange-950"
                           : "bg-muted text-foreground";
+                  const investimento = Number(p.investimento) || 0;
+                  const isLevantamento =
+                    (p.investimento_raw || "").trim().toLowerCase() ===
+                    "fazer levantamento";
+                  const roi = isLevantamento
+                    ? null
+                    : computePaybackValidado(
+                        investimento,
+                        p.savingAprovadoEfetivo,
+                        Number(p.saving_previsto) || 0,
+                      );
                   return (
                     <TableRow key={p.matricula}>
                       <TableCell className="text-center">
@@ -593,14 +607,37 @@ export function PerformanceExecutivoPanel({
                           {p.projeto}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {p.lider || "—"}
+                      <TableCell className="text-right text-sm font-semibold tabular-nums">
+                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {isLevantamento ? "—" : fmtMoney(investimento)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {isLevantamento ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : roi != null && !isFinite(roi) ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-success">
+                            <InfinityIcon className="h-4 w-4" /> Imediato
+                          </span>
+                        ) : (
+                          <span className={paybackToneClass(roi)}>
+                            {fmtPayback(roi)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">
                         {p.gerente || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-semibold tabular-nums">
-                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                      <TableCell className="text-sm">
+                        {p.lider || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {p.status ? (
+                          <Badge variant="secondary">{p.status}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
