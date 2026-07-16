@@ -33,8 +33,13 @@ import {
   fmtMoney,
   fmtPct,
   uniq,
+  computePaybackValidado,
+  fmtPayback,
+  paybackToneClass,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
+import { Infinity as InfinityIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionCard } from "./SectionCard";
 import {
@@ -184,7 +189,7 @@ export function PerformanceExecutivoPanel({
       fGerente === ALL
         ? uniq(projetos.map((p) => (p.gerente || "").trim())).filter(Boolean).sort()
         : [fGerente];
-    return gerentesAtivos.map((g) => {
+    const rows = gerentesAtivos.map((g) => {
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
@@ -193,6 +198,14 @@ export function PerformanceExecutivoPanel({
         meta: metaByGerente.get(g) || 0,
       };
     });
+    // Ordenar por ordem de grandeza (maior para o menor), usando o maior entre
+    // saving previsto, saving aprovado e meta como critério de comparação.
+    rows.sort(
+      (a, b) =>
+        Math.max(b.previsto, b.aprovado, b.meta) -
+        Math.max(a.previsto, a.aprovado, a.meta),
+    );
+    return rows;
   }, [projetos, metas, fGerente]);
 
   const top5 = useMemo(
@@ -370,7 +383,7 @@ export function PerformanceExecutivoPanel({
       </div>
 
       {/* Linha 3 — Indicadores Estratégicos */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-[var(--shadow-card)] lg:col-span-1 bg-sky-50/60 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white">
@@ -433,7 +446,7 @@ export function PerformanceExecutivoPanel({
           </CardContent>
         </Card>
 
-        <Card className="shadow-[var(--shadow-card)] lg:col-span-3 bg-card">
+        <Card className="shadow-[var(--shadow-card)] lg:col-span-1 bg-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs font-medium text-muted-foreground">
@@ -536,18 +549,21 @@ export function PerformanceExecutivoPanel({
               <TableRow>
                 <TableHead className="w-20 text-center">Ranking</TableHead>
                 <TableHead>Projeto</TableHead>
-                <TableHead>Líder</TableHead>
-                <TableHead>Gerente</TableHead>
                 <TableHead className="text-right">
                   Previsão de Saving (12 meses)
                 </TableHead>
+                <TableHead className="text-right">Investimento</TableHead>
+                <TableHead className="text-right">ROI</TableHead>
+                <TableHead>Gerente</TableHead>
+                <TableHead>Líder</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {top5.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={8}
                     className="text-center text-sm text-muted-foreground"
                   >
                     Nenhum projeto encontrado com os filtros atuais.
@@ -563,6 +579,17 @@ export function PerformanceExecutivoPanel({
                         : i === 2
                           ? "bg-orange-400 text-orange-950"
                           : "bg-muted text-foreground";
+                  const investimento = Number(p.investimento) || 0;
+                  const isLevantamento =
+                    (p.investimento_raw || "").trim().toLowerCase() ===
+                    "fazer levantamento";
+                  const roi = isLevantamento
+                    ? null
+                    : computePaybackValidado(
+                        investimento,
+                        p.savingAprovadoEfetivo,
+                        Number(p.saving_previsto) || 0,
+                      );
                   return (
                     <TableRow key={p.matricula}>
                       <TableCell className="text-center">
@@ -580,14 +607,37 @@ export function PerformanceExecutivoPanel({
                           {p.projeto}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {p.lider || "—"}
+                      <TableCell className="text-right text-sm font-semibold tabular-nums">
+                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {isLevantamento ? "—" : fmtMoney(investimento)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {isLevantamento ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : roi != null && !isFinite(roi) ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-success">
+                            <InfinityIcon className="h-4 w-4" /> Imediato
+                          </span>
+                        ) : (
+                          <span className={paybackToneClass(roi)}>
+                            {fmtPayback(roi)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">
                         {p.gerente || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm font-semibold tabular-nums">
-                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                      <TableCell className="text-sm">
+                        {p.lider || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {p.status ? (
+                          <Badge variant="secondary">{p.status}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
