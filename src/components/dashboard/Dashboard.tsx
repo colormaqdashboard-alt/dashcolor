@@ -1503,14 +1503,33 @@ export default function Dashboard() {
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard
                 title="Percentual de Conclusão"
-                description="Quantidade de projetos por % (mapeamento da aba Funcionalidade)"
+                description="Quantidade de projetos por % (exclui Inviabilizados)"
               >
                 <ChartWrap height={340}>
                   <BarChart data={distPctConclusao} layout="vertical" margin={{ left: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
                     <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={60} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0].payload as {
+                          pct: string;
+                          qtd: number;
+                          conclusao: string;
+                        };
+                        return (
+                          <div style={tooltipStyle} className="px-3 py-2 text-xs">
+                            <div className="font-semibold">{d.pct}</div>
+                            <div>Conclusão: {d.conclusao}</div>
+                            <div>
+                              {d.qtd} {d.qtd === 1 ? "projeto" : "projetos"}
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
                     <Bar dataKey="qtd" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ChartWrap>
