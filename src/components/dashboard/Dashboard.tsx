@@ -793,13 +793,18 @@ export default function Dashboard() {
 
   const distPctConclusao = useMemo(() => {
     const m = new Map<number, number>();
-    projetos.forEach((p) => {
-      const pct = Math.round(p.pctConclusao * 100);
-      m.set(pct, (m.get(pct) || 0) + 1);
-    });
-    return Array.from(m, ([pct, qtd]) => ({ pct: `${pct}%`, qtd, order: pct })).sort(
-      (a, b) => a.order - b.order,
-    );
+    projetos
+      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .forEach((p) => {
+        const pct = Math.round(p.pctConclusao * 100);
+        m.set(pct, (m.get(pct) || 0) + 1);
+      });
+    return Array.from(m, ([pct, qtd]) => ({
+      pct: `${pct}%`,
+      qtd,
+      order: pct,
+      conclusao: CONCLUSAO_POR_PCT[pct] || `${pct}%`,
+    })).sort((a, b) => a.order - b.order);
   }, [projetos]);
 
   const distStatusW = useMemo(() => {
