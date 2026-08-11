@@ -1108,6 +1108,7 @@ export default function Dashboard() {
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
             <TabsTrigger value="projetos">Projetos</TabsTrigger>
+            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
           </TabsList>
 
           {/* VISÃO GERAL */}
