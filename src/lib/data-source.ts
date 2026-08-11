@@ -6,6 +6,14 @@ export type DashboardData = {
   equipe: { lider: string; gerente: string }[];
   metas: { gerente: string; meta: number }[];
   fases: { fase: string; pct: number; etapa: string }[];
+  novosProjetos: NovoProjeto[];
+};
+
+export type NovoProjeto = {
+  projeto: string;
+  total_descartado: number | null;
+  objetivo: string | null;
+  codigo_produto: string | null;
 };
 
 const norm = (s: unknown) =>
@@ -248,7 +256,30 @@ function workbookToData(wb: XLSX.WorkBook): DashboardData {
     equipe: buildEquipe(equipeRows),
     metas: buildMetasGerentes(metasRows),
     fases: buildFases(sheetToRows(wb, "Funcionalidade")),
+    novosProjetos: buildNovosProjetos(sheetToRows(wb, "Novos Projetos")),
   };
+}
+
+// Aba "Novos Projetos": A = Projeto, B = Total Descartado, C = Objetivo,
+// D = Código do Produto. Base independente da carteira do PPM.
+function buildNovosProjetos(rows: unknown[][]): NovoProjeto[] {
+  if (!rows || rows.length < 1) return [];
+  const first = rows[0] || [];
+  const firstIsHeader =
+    !!toStr(first[0]) && toNumber(first[1]) == null && /projeto|descri|nome/.test(norm(first[0]));
+  const out: NovoProjeto[] = [];
+  for (let i = firstIsHeader ? 1 : 0; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const projeto = toStr(r[0]);
+    if (!projeto) continue;
+    out.push({
+      projeto,
+      total_descartado: toNumber(r[1]),
+      objetivo: toStr(r[2]),
+      codigo_produto: toStr(r[3]),
+    });
+  }
+  return out;
 }
 
 export async function loadFromExcelFile(file: File): Promise<DashboardData> {

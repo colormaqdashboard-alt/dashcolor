@@ -72,6 +72,7 @@ import {
 import {
   loadFromGoogleSheets,
   type DashboardData,
+  type NovoProjeto,
 } from "@/lib/data-source";
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
@@ -79,6 +80,7 @@ import { FinanceiroTable } from "./FinanceiroTable";
 import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
 import { StatusReportDialog } from "./StatusReportDialog";
 import { PerformanceExecutivoPanel } from "./PerformanceExecutivoPanel";
+import { NovosProjetosPanel } from "./NovosProjetosPanel";
 import type { StatusReportRow } from "@/lib/status-report";
 
 const ALL = "__all__";
@@ -117,7 +119,20 @@ type SourceState = {
   detail: string;
   projetos: Projeto[];
   metas: { gerente: string; meta: number }[];
+  novosProjetos: NovoProjeto[];
   updatedAt: Date;
+};
+
+// Relação oficial percentual → Conclusão (coluna F da estrutura de fases).
+const CONCLUSAO_POR_PCT: Record<number, string> = {
+  0: "Não iniciado",
+  20: "1ª fase",
+  40: "2ª fase",
+  60: "3ª fase",
+  70: "3ª fase",
+  80: "4ª fase",
+  90: "5ª fase",
+  100: "Finalizado",
 };
 
 function loadPersistedSource(): SourceState | null {
@@ -132,6 +147,7 @@ function loadPersistedSource(): SourceState | null {
       detail: parsed.detail,
       projetos: parsed.projetos as Projeto[],
       metas: parsed.metas || [],
+      novosProjetos: (parsed.novosProjetos || []) as NovoProjeto[],
       updatedAt: parsed.updatedAt ? new Date(parsed.updatedAt) : new Date(),
     };
   } catch {
@@ -148,6 +164,7 @@ export default function Dashboard() {
       detail: `${RAW.projetos.length} projetos`,
       projetos: RAW.projetos as Projeto[],
       metas: RAW.metas || [],
+      novosProjetos: [],
       updatedAt: new Date(),
     };
   });
@@ -170,7 +187,7 @@ export default function Dashboard() {
       try {
         const { data, error } = await supabase
           .from("dashboard_snapshot")
-          .select("label, detail, sheet_url, projetos, metas, updated_at")
+          .select("label, detail, sheet_url, projetos, metas, novos_projetos, updated_at")
           .eq("id", 1)
           .maybeSingle();
         if (cancelled || error || !data) return;
@@ -181,6 +198,7 @@ export default function Dashboard() {
           detail: data.detail || `${projetos.length} projetos sincronizados`,
           projetos,
           metas: (data.metas as unknown as { gerente: string; meta: number }[]) || [],
+          novosProjetos: (data.novos_projetos as unknown as NovoProjeto[]) || [],
           updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
         };
         setSource(next);
@@ -219,6 +237,7 @@ export default function Dashboard() {
       detail,
       projetos: data.projetos,
       metas: data.metas || [],
+      novosProjetos: data.novosProjetos || [],
       updatedAt: new Date(),
     };
     setSource(next);
@@ -240,6 +259,7 @@ export default function Dashboard() {
           sheet_url: persistSheetUrl ?? null,
           projetos: data.projetos as any,
           metas: (data.metas || []) as any,
+          novos_projetos: (data.novosProjetos || []) as any,
           updated_at: next.updatedAt.toISOString(),
         },
         { onConflict: "id" },
@@ -774,13 +794,18 @@ export default function Dashboard() {
 
   const distPctConclusao = useMemo(() => {
     const m = new Map<number, number>();
-    projetos.forEach((p) => {
-      const pct = Math.round(p.pctConclusao * 100);
-      m.set(pct, (m.get(pct) || 0) + 1);
-    });
-    return Array.from(m, ([pct, qtd]) => ({ pct: `${pct}%`, qtd, order: pct })).sort(
-      (a, b) => a.order - b.order,
-    );
+    projetos
+      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .forEach((p) => {
+        const pct = Math.round(p.pctConclusao * 100);
+        m.set(pct, (m.get(pct) || 0) + 1);
+      });
+    return Array.from(m, ([pct, qtd]) => ({
+      pct: `${pct}%`,
+      qtd,
+      order: pct,
+      conclusao: CONCLUSAO_POR_PCT[pct] || `${pct}%`,
+    })).sort((a, b) => a.order - b.order);
   }, [projetos]);
 
   const distStatusW = useMemo(() => {
@@ -1084,6 +1109,7 @@ export default function Dashboard() {
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
             <TabsTrigger value="projetos">Projetos</TabsTrigger>
+            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
           </TabsList>
 
           {/* VISÃO GERAL */}
@@ -1479,14 +1505,33 @@ export default function Dashboard() {
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard
                 title="Percentual de Conclusão"
-                description="Quantidade de projetos por % (mapeamento da aba Funcionalidade)"
+                description="Quantidade de projetos por % (exclui Inviabilizados)"
               >
                 <ChartWrap height={340}>
                   <BarChart data={distPctConclusao} layout="vertical" margin={{ left: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
                     <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={60} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0].payload as {
+                          pct: string;
+                          qtd: number;
+                          conclusao: string;
+                        };
+                        return (
+                          <div style={tooltipStyle} className="px-3 py-2 text-xs">
+                            <div className="font-semibold">{d.pct}</div>
+                            <div>Conclusão: {d.conclusao}</div>
+                            <div>
+                              {d.qtd} {d.qtd === 1 ? "projeto" : "projetos"}
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
                     <Bar dataKey="qtd" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ChartWrap>
@@ -1697,6 +1742,11 @@ export default function Dashboard() {
                 </Table>
               </div>
             </SectionCard>
+          </TabsContent>
+
+          {/* NOVOS PROJETOS (aba independente da carteira) */}
+          <TabsContent value="novos" className="mt-4 space-y-4">
+            <NovosProjetosPanel novos={source.novosProjetos} />
           </TabsContent>
         </Tabs>
 

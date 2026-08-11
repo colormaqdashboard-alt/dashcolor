@@ -1,0 +1,1 @@
+ALTER TABLE public.dashboard_snapshot ADD COLUMN IF NOT EXISTS novos_projetos jsonb NOT NULL DEFAULT '[]'::jsonb;
