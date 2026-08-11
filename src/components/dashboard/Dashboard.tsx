@@ -80,6 +80,7 @@ import { FinanceiroTable } from "./FinanceiroTable";
 import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
 import { StatusReportDialog } from "./StatusReportDialog";
 import { PerformanceExecutivoPanel } from "./PerformanceExecutivoPanel";
+import { NovosProjetosPanel } from "./NovosProjetosPanel";
 import type { StatusReportRow } from "@/lib/status-report";
 
 const ALL = "__all__";
