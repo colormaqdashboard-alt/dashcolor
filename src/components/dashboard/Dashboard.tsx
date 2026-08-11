@@ -72,6 +72,7 @@ import {
 import {
   loadFromGoogleSheets,
   type DashboardData,
+  type NovoProjeto,
 } from "@/lib/data-source";
 import { Kpi } from "./Kpi";
 import { SectionCard } from "./SectionCard";
@@ -117,7 +118,20 @@ type SourceState = {
   detail: string;
   projetos: Projeto[];
   metas: { gerente: string; meta: number }[];
+  novosProjetos: NovoProjeto[];
   updatedAt: Date;
+};
+
+// Relação oficial percentual → Conclusão (coluna F da estrutura de fases).
+const CONCLUSAO_POR_PCT: Record<number, string> = {
+  0: "Não iniciado",
+  20: "1ª fase",
+  40: "2ª fase",
+  60: "3ª fase",
+  70: "3ª fase",
+  80: "4ª fase",
+  90: "5ª fase",
+  100: "Finalizado",
 };
 
 function loadPersistedSource(): SourceState | null {
@@ -132,6 +146,7 @@ function loadPersistedSource(): SourceState | null {
       detail: parsed.detail,
       projetos: parsed.projetos as Projeto[],
       metas: parsed.metas || [],
+      novosProjetos: (parsed.novosProjetos || []) as NovoProjeto[],
       updatedAt: parsed.updatedAt ? new Date(parsed.updatedAt) : new Date(),
     };
   } catch {
@@ -148,6 +163,7 @@ export default function Dashboard() {
       detail: `${RAW.projetos.length} projetos`,
       projetos: RAW.projetos as Projeto[],
       metas: RAW.metas || [],
+      novosProjetos: [],
       updatedAt: new Date(),
     };
   });
@@ -170,7 +186,7 @@ export default function Dashboard() {
       try {
         const { data, error } = await supabase
           .from("dashboard_snapshot")
-          .select("label, detail, sheet_url, projetos, metas, updated_at")
+          .select("label, detail, sheet_url, projetos, metas, novos_projetos, updated_at")
           .eq("id", 1)
           .maybeSingle();
         if (cancelled || error || !data) return;
@@ -181,6 +197,7 @@ export default function Dashboard() {
           detail: data.detail || `${projetos.length} projetos sincronizados`,
           projetos,
           metas: (data.metas as unknown as { gerente: string; meta: number }[]) || [],
+          novosProjetos: (data.novos_projetos as unknown as NovoProjeto[]) || [],
           updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
         };
         setSource(next);
@@ -219,6 +236,7 @@ export default function Dashboard() {
       detail,
       projetos: data.projetos,
       metas: data.metas || [],
+      novosProjetos: data.novosProjetos || [],
       updatedAt: new Date(),
     };
     setSource(next);
@@ -240,6 +258,7 @@ export default function Dashboard() {
           sheet_url: persistSheetUrl ?? null,
           projetos: data.projetos as any,
           metas: (data.metas || []) as any,
+          novos_projetos: (data.novosProjetos || []) as any,
           updated_at: next.updatedAt.toISOString(),
         },
         { onConflict: "id" },
