@@ -6,6 +6,14 @@ export type DashboardData = {
   equipe: { lider: string; gerente: string }[];
   metas: { gerente: string; meta: number }[];
   fases: { fase: string; pct: number; etapa: string }[];
+  novosProjetos: NovoProjeto[];
+};
+
+export type NovoProjeto = {
+  projeto: string;
+  total_descartado: number | null;
+  objetivo: string | null;
+  codigo_produto: string | null;
 };
 
 const norm = (s: unknown) =>
