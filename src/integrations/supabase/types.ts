@@ -20,6 +20,7 @@ export type Database = {
           id: number
           label: string | null
           metas: Json
+          novos_projetos: Json
           projetos: Json
           sheet_url: string | null
           updated_at: string
@@ -29,6 +30,7 @@ export type Database = {
           id?: number
           label?: string | null
           metas?: Json
+          novos_projetos?: Json
           projetos?: Json
           sheet_url?: string | null
           updated_at?: string
@@ -38,6 +40,7 @@ export type Database = {
           id?: number
           label?: string | null
           metas?: Json
+          novos_projetos?: Json
           projetos?: Json
           sheet_url?: string | null
           updated_at?: string
