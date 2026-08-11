@@ -54,22 +54,22 @@ export function NovosProjetosPanel({ novos }: { novos: NovoProjeto[] }) {
     <>
       <div className="grid gap-3 md:grid-cols-3">
         <Kpi
-          title="Novos Projetos"
+          label="Novos Projetos"
           value={String(rows.length)}
-          subtitle="REGISTROS LISTADOS"
-          icon={Lightbulb}
+          sub="REGISTROS LISTADOS"
+          icon={<Lightbulb className="h-4 w-4" />}
         />
         <Kpi
-          title="Total Descartado"
+          label="Total Descartado"
           value={fmtMoney(totalDescartado)}
-          subtitle="SOMA DA COLUNA B"
-          icon={ListChecks}
+          sub="SOMA DA COLUNA B"
+          icon={<ListChecks className="h-4 w-4" />}
         />
         <Kpi
-          title="Com Código de Produto"
+          label="Com Código de Produto"
           value={String(comCodigo)}
-          subtitle="COLUNA D PREENCHIDA"
-          icon={Package}
+          sub="COLUNA D PREENCHIDA"
+          icon={<Package className="h-4 w-4" />}
         />
       </div>
 
