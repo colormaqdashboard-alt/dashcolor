@@ -1742,6 +1742,11 @@ export default function Dashboard() {
               </div>
             </SectionCard>
           </TabsContent>
+
+          {/* NOVOS PROJETOS (aba independente da carteira) */}
+          <TabsContent value="novos" className="mt-4 space-y-4">
+            <NovosProjetosPanel novos={source.novosProjetos} />
+          </TabsContent>
         </Tabs>
 
         <footer className="pt-4 text-center text-xs text-muted-foreground">
