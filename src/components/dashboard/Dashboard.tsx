@@ -50,7 +50,6 @@ import {
   RefreshCw,
   RotateCcw,
   Target,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import {
