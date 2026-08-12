@@ -54,12 +54,6 @@ import { cn } from "@/lib/utils";
 
 const ALL = "__all__";
 const META_TOTAL_FIXO = 8_000_000;
-const INACTIVE_STATUS = new Set([
-  "inviabilizado",
-  "reprovado pela controladoria",
-]);
-const isActive = (status?: string | null) =>
-  !INACTIVE_STATUS.has((status || "").trim().toLowerCase());
 
 type Props = {
   all: EnrichedProjeto[];
