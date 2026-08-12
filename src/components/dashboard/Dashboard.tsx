@@ -1519,7 +1519,7 @@ export default function Dashboard() {
                   <BarChart data={distPctConclusao} layout="vertical" margin={{ left: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
-                    <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={60} />
+                    <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={96} />
                     <Tooltip
                       contentStyle={tooltipStyle}
                       content={({ active, payload }) => {
@@ -1529,6 +1529,16 @@ export default function Dashboard() {
                           qtd: number;
                           conclusao: string;
                         };
+                        if (d.pct === "Novos Projetos") {
+                          return (
+                            <div style={tooltipStyle} className="px-3 py-2 text-xs">
+                              <div className="font-semibold">Novos Projetos</div>
+                              <div>
+                                Quantidade: {d.qtd} {d.qtd === 1 ? "projeto" : "projetos"}
+                              </div>
+                            </div>
+                          );
+                        }
                         return (
                           <div style={tooltipStyle} className="px-3 py-2 text-xs">
                             <div className="font-semibold">{d.pct}</div>
