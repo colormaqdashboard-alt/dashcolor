@@ -147,7 +147,6 @@ export function PerformanceExecutivoPanel({
   const totals = useMemo(() => {
     const gerentes = uniq(projetos.map((p) => p.gerente)).length;
     const lideres = uniq(projetos.map((p) => p.lider)).length;
-    const ativos = projetos.filter((p) => isActive(p.status));
     const savingPrev = projetos.reduce(
       (s, p) => s + p.savingPrevistoEfetivo,
       0,
