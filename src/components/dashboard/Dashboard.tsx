@@ -129,7 +129,6 @@ const CONCLUSAO_POR_PCT: Record<number, string> = {
   20: "1ª fase",
   40: "2ª fase",
   60: "3ª fase",
-  70: "3ª fase",
   80: "4ª fase",
   90: "5ª fase",
   100: "Finalizado",
@@ -800,13 +799,22 @@ export default function Dashboard() {
         const pct = Math.round(p.pctConclusao * 100);
         m.set(pct, (m.get(pct) || 0) + 1);
       });
-    return Array.from(m, ([pct, qtd]) => ({
+    const base = Array.from(m, ([pct, qtd]) => ({
       pct: `${pct}%`,
       qtd,
       order: pct,
       conclusao: CONCLUSAO_POR_PCT[pct] || `${pct}%`,
     })).sort((a, b) => a.order - b.order);
-  }, [projetos]);
+    return [
+      {
+        pct: "Novos Projetos",
+        qtd: source.novosProjetos.length,
+        order: -1,
+        conclusao: "Novos Projetos",
+      },
+      ...base,
+    ];
+  }, [projetos, source.novosProjetos]);
 
   const distStatusW = useMemo(() => {
     const m = new Map<string, number>();
@@ -888,7 +896,9 @@ export default function Dashboard() {
             <span>·</span>
             <span>{source.detail}</span>
             <span>·</span>
-            <span>Atualizado: {source.updatedAt.toLocaleString("pt-BR")}</span>
+            <span suppressHydrationWarning>
+              Atualizado: {source.updatedAt.toLocaleString("pt-BR")}
+            </span>
             {source.label === "Google Sheets" ? (
               <Badge variant="secondary" className="ml-1">Sincronização manual</Badge>
             ) : null}
@@ -1511,7 +1521,7 @@ export default function Dashboard() {
                   <BarChart data={distPctConclusao} layout="vertical" margin={{ left: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
-                    <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={60} />
+                    <YAxis type="category" dataKey="pct" stroke="var(--muted-foreground)" fontSize={11} width={96} />
                     <Tooltip
                       contentStyle={tooltipStyle}
                       content={({ active, payload }) => {
@@ -1521,6 +1531,16 @@ export default function Dashboard() {
                           qtd: number;
                           conclusao: string;
                         };
+                        if (d.pct === "Novos Projetos") {
+                          return (
+                            <div style={tooltipStyle} className="px-3 py-2 text-xs">
+                              <div className="font-semibold">Novos Projetos</div>
+                              <div>
+                                Quantidade: {d.qtd} {d.qtd === 1 ? "projeto" : "projetos"}
+                              </div>
+                            </div>
+                          );
+                        }
                         return (
                           <div style={tooltipStyle} className="px-3 py-2 text-xs">
                             <div className="font-semibold">{d.pct}</div>
