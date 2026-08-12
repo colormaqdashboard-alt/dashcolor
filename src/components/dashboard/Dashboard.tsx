@@ -129,7 +129,6 @@ const CONCLUSAO_POR_PCT: Record<number, string> = {
   20: "1ª fase",
   40: "2ª fase",
   60: "3ª fase",
-  70: "3ª fase",
   80: "4ª fase",
   90: "5ª fase",
   100: "Finalizado",
@@ -800,13 +799,22 @@ export default function Dashboard() {
         const pct = Math.round(p.pctConclusao * 100);
         m.set(pct, (m.get(pct) || 0) + 1);
       });
-    return Array.from(m, ([pct, qtd]) => ({
+    const base = Array.from(m, ([pct, qtd]) => ({
       pct: `${pct}%`,
       qtd,
       order: pct,
       conclusao: CONCLUSAO_POR_PCT[pct] || `${pct}%`,
     })).sort((a, b) => a.order - b.order);
-  }, [projetos]);
+    return [
+      {
+        pct: "Novos Projetos",
+        qtd: source.novosProjetos.length,
+        order: -1,
+        conclusao: "Novos Projetos",
+      },
+      ...base,
+    ];
+  }, [projetos, source.novosProjetos]);
 
   const distStatusW = useMemo(() => {
     const m = new Map<string, number>();
