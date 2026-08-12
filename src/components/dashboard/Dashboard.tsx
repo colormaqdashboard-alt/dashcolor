@@ -896,7 +896,9 @@ export default function Dashboard() {
             <span>·</span>
             <span>{source.detail}</span>
             <span>·</span>
-            <span>Atualizado: {source.updatedAt.toLocaleString("pt-BR")}</span>
+            <span suppressHydrationWarning>
+              Atualizado: {source.updatedAt.toLocaleString("pt-BR")}
+            </span>
             {source.label === "Google Sheets" ? (
               <Badge variant="secondary" className="ml-1">Sincronização manual</Badge>
             ) : null}
