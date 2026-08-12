@@ -982,7 +982,7 @@ export default function Dashboard() {
 
         {/* KPIs */}
         {showIndicators && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 animate-in fade-in slide-in-from-top-2 duration-300">
             <Kpi
               tone="primary"
               label="Total de Projetos"
@@ -997,12 +997,6 @@ export default function Dashboard() {
               sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
               icon={<CheckCircle2 className="h-5 w-5" />}
               className="text-black [&_*]:text-black"
-            />
-            <Kpi
-              label="Conclusão Média"
-              value={fmtPct(totals.pctMedio)}
-              sub={`${totals.finalizados} na Fase 5+`}
-              icon={<TrendingUp className="h-5 w-5" />}
             />
             <Kpi
               label="Saving Previsto (12 meses)"
