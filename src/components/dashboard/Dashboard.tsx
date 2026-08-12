@@ -408,7 +408,7 @@ export default function Dashboard() {
     const finalizados = projetos.filter(
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
-    const savingPrev = projetos.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0);
+    const savingPrev = projetos.reduce((s, p) => s + p.savingPrevistoEfetivo, 0);
     // Saving aprovado: SOMENTE projetos com status "Validado pela controladoria" (coluna W).
     const savingAprov = projetos.reduce((s, p) => s + p.savingAprovadoEfetivo, 0);
     const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
@@ -464,7 +464,7 @@ export default function Dashboard() {
       const k = p.lider || "Sem líder";
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
-      cur.saving += Number(p.saving_previsto) || 0;
+      cur.saving += p.savingPrevistoEfetivo;
       cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
@@ -485,7 +485,7 @@ export default function Dashboard() {
       const k = (p.gerente || "Sem gerente").trim();
       const cur = m.get(k) || { qtd: 0, saving: 0, aprovado: 0 };
       cur.qtd += 1;
-      cur.saving += Number(p.saving_previsto) || 0;
+      cur.saving += p.savingPrevistoEfetivo;
       cur.aprovado += p.savingAprovadoEfetivo;
       m.set(k, cur);
     });
@@ -528,7 +528,7 @@ export default function Dashboard() {
       const k = p.setor || "Sem setor";
       const cur = m.get(k) || { qtd: 0, saving: 0, investimento: 0 };
       cur.qtd += 1;
-      cur.saving += Number(p.saving_previsto) || 0;
+      cur.saving += p.savingPrevistoEfetivo;
       cur.investimento += Number(p.investimento) || 0;
       m.set(k, cur);
     });
@@ -541,7 +541,7 @@ export default function Dashboard() {
     const m = new Map<string, number>();
     projetos.forEach((p) => {
       const k = p.tipo || "Sem tipo";
-      m.set(k, (m.get(k) || 0) + (Number(p.saving_previsto) || 0));
+      m.set(k, (m.get(k) || 0) + p.savingPrevistoEfetivo);
     });
     return Array.from(m, ([name, value]) => ({ name, value }));
   }, [projetos]);
@@ -581,7 +581,7 @@ export default function Dashboard() {
 
   // ---- Rankings de Projetos ----
   const rankSavingPrev = useMemo(
-    () => projetos.slice().sort((a, b) => (Number(b.saving_previsto) || 0) - (Number(a.saving_previsto) || 0)).slice(0, 20),
+    () => projetos.slice().sort((a, b) => b.savingPrevistoEfetivo - a.savingPrevistoEfetivo).slice(0, 20),
     [projetos],
   );
   const rankSavingAprov = useMemo(
@@ -629,8 +629,8 @@ export default function Dashboard() {
     () =>
       pareto(
         projetos
-          .filter((p) => (Number(p.saving_previsto) || 0) > 0)
-          .map((p) => ({ label: p.projeto, value: Number(p.saving_previsto) || 0 }))
+          .filter((p) => p.savingPrevistoEfetivo > 0)
+          .map((p) => ({ label: p.projeto, value: p.savingPrevistoEfetivo }))
       ).slice(0, 20),
     [projetos]
   );
