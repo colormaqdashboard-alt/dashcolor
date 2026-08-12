@@ -149,7 +149,7 @@ export function PerformanceExecutivoPanel({
     const lideres = uniq(projetos.map((p) => p.lider)).length;
     const ativos = projetos.filter((p) => isActive(p.status));
     const savingPrev = projetos.reduce(
-      (s, p) => s + (Number(p.saving_previsto) || 0),
+      (s, p) => s + p.savingPrevistoEfetivo,
       0,
     );
     const savingAprov = projetos.reduce(
@@ -193,7 +193,7 @@ export function PerformanceExecutivoPanel({
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
-        previsto: lista.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0),
+        previsto: lista.reduce((s, p) => s + p.savingPrevistoEfetivo, 0),
         aprovado: lista.reduce((s, p) => s + p.savingAprovadoEfetivo, 0),
         meta: metaByGerente.get(g) || 0,
       };
@@ -214,8 +214,8 @@ export function PerformanceExecutivoPanel({
         .slice()
         .sort(
           (a, b) =>
-            (Number(b.saving_previsto) || 0) -
-            (Number(a.saving_previsto) || 0),
+            b.savingPrevistoEfetivo -
+            a.savingPrevistoEfetivo,
         )
         .slice(0, 5),
     [projetos],
