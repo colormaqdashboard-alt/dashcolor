@@ -48,7 +48,7 @@ type RowCalc = {
 function buildRows(projetos: EnrichedProjeto[]): RowCalc[] {
   return projetos.map((p) => {
     const investimento = Number(p.investimento) || 0;
-    const savingPrev = Number(p.saving_previsto) || 0;
+    const savingPrev = p.savingPrevistoEfetivo;
     const savingVal = p.savingAprovadoEfetivo;
     const levantamento = isLevantamento(p.investimento_raw);
     return {

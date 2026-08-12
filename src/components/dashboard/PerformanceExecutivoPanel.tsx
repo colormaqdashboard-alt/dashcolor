@@ -54,12 +54,6 @@ import { cn } from "@/lib/utils";
 
 const ALL = "__all__";
 const META_TOTAL_FIXO = 8_000_000;
-const INACTIVE_STATUS = new Set([
-  "inviabilizado",
-  "reprovado pela controladoria",
-]);
-const isActive = (status?: string | null) =>
-  !INACTIVE_STATUS.has((status || "").trim().toLowerCase());
 
 type Props = {
   all: EnrichedProjeto[];
@@ -147,9 +141,8 @@ export function PerformanceExecutivoPanel({
   const totals = useMemo(() => {
     const gerentes = uniq(projetos.map((p) => p.gerente)).length;
     const lideres = uniq(projetos.map((p) => p.lider)).length;
-    const ativos = projetos.filter((p) => isActive(p.status));
     const savingPrev = projetos.reduce(
-      (s, p) => s + (Number(p.saving_previsto) || 0),
+      (s, p) => s + p.savingPrevistoEfetivo,
       0,
     );
     const savingAprov = projetos.reduce(
@@ -159,7 +152,7 @@ export function PerformanceExecutivoPanel({
     return {
       gerentes,
       lideres,
-      projetos: ativos.length,
+      projetos: projetos.length,
       savingPrev,
       savingAprov,
     };
@@ -193,7 +186,7 @@ export function PerformanceExecutivoPanel({
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
-        previsto: lista.reduce((s, p) => s + (Number(p.saving_previsto) || 0), 0),
+        previsto: lista.reduce((s, p) => s + p.savingPrevistoEfetivo, 0),
         aprovado: lista.reduce((s, p) => s + p.savingAprovadoEfetivo, 0),
         meta: metaByGerente.get(g) || 0,
       };
@@ -214,8 +207,8 @@ export function PerformanceExecutivoPanel({
         .slice()
         .sort(
           (a, b) =>
-            (Number(b.saving_previsto) || 0) -
-            (Number(a.saving_previsto) || 0),
+            b.savingPrevistoEfetivo -
+            a.savingPrevistoEfetivo,
         )
         .slice(0, 5),
     [projetos],
@@ -588,7 +581,7 @@ export function PerformanceExecutivoPanel({
                     : computePaybackValidado(
                         investimento,
                         p.savingAprovadoEfetivo,
-                        Number(p.saving_previsto) || 0,
+                        p.savingPrevistoEfetivo,
                       );
                   return (
                     <TableRow key={p.matricula}>
@@ -608,7 +601,7 @@ export function PerformanceExecutivoPanel({
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-sm font-semibold tabular-nums">
-                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                        {fmtMoney(p.savingPrevistoEfetivo)}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {isLevantamento ? "—" : fmtMoney(investimento)}
