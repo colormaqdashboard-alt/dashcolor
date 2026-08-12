@@ -50,7 +50,6 @@ import {
   RefreshCw,
   RotateCcw,
   Target,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import {
@@ -445,6 +444,17 @@ export default function Dashboard() {
   const distFases = useMemo(() => {
     const m = new Map<string, number>();
     projetos.forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
+    return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
+      (a, b) => b.qtd - a.qtd
+    );
+  }, [projetos]);
+
+  // Distribuição por Fase na Visão Geral: exclui "Inviabilizado" (mesmo critério do gráfico Percentual de Conclusão).
+  const distFasesVisao = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos
+      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
     return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
       (a, b) => b.qtd - a.qtd
     );
@@ -982,7 +992,7 @@ export default function Dashboard() {
 
         {/* KPIs */}
         {showIndicators && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 animate-in fade-in slide-in-from-top-2 duration-300">
             <Kpi
               tone="primary"
               label="Total de Projetos"
@@ -997,12 +1007,6 @@ export default function Dashboard() {
               sub={fmtPct(totals.total ? totals.validados / totals.total : 0)}
               icon={<CheckCircle2 className="h-5 w-5" />}
               className="text-black [&_*]:text-black"
-            />
-            <Kpi
-              label="Conclusão Média"
-              value={fmtPct(totals.pctMedio)}
-              sub={`${totals.finalizados} na Fase 5+`}
-              icon={<TrendingUp className="h-5 w-5" />}
             />
             <Kpi
               label="Saving Previsto (12 meses)"
@@ -1131,7 +1135,7 @@ export default function Dashboard() {
                 className="lg:col-span-2"
               >
                 <ChartWrap>
-                  <BarChart data={distFases} layout="vertical" margin={{ left: 20 }}>
+                  <BarChart data={distFasesVisao} layout="vertical" margin={{ left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
                     <YAxis
