@@ -159,7 +159,7 @@ export function PerformanceExecutivoPanel({
     return {
       gerentes,
       lideres,
-      projetos: ativos.length,
+      projetos: projetos.length,
       savingPrev,
       savingAprov,
     };
@@ -588,7 +588,7 @@ export function PerformanceExecutivoPanel({
                     : computePaybackValidado(
                         investimento,
                         p.savingAprovadoEfetivo,
-                        Number(p.saving_previsto) || 0,
+                        p.savingPrevistoEfetivo,
                       );
                   return (
                     <TableRow key={p.matricula}>
@@ -608,7 +608,7 @@ export function PerformanceExecutivoPanel({
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-sm font-semibold tabular-nums">
-                        {fmtMoney(Number(p.saving_previsto) || 0)}
+                        {fmtMoney(p.savingPrevistoEfetivo)}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {isLevantamento ? "—" : fmtMoney(investimento)}
