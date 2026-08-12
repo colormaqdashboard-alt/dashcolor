@@ -1136,7 +1136,7 @@ export default function Dashboard() {
                 className="lg:col-span-2"
               >
                 <ChartWrap>
-                  <BarChart data={distFases} layout="vertical" margin={{ left: 20 }}>
+                  <BarChart data={distFasesVisao} layout="vertical" margin={{ left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} />
                     <YAxis
