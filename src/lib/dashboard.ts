@@ -41,9 +41,9 @@ export const FASE_ORDER: { key: keyof Projeto; label: string; pct: number }[] = 
   { key: "fase1", label: "Fase 1 - Estudo do Problema", pct: 0.2 },
   { key: "fase2", label: "Fase 2 - Levantamento de Dados", pct: 0.4 },
   { key: "fase3", label: "Fase 3 - Plano de Ação", pct: 0.6 },
-  { key: "fase3_1", label: "Fase 3.1 - Ações sem Investimento", pct: 0.7 },
-  { key: "fase3_2", label: "Fase 3.2 - Ações com Investimento", pct: 0.7 },
-  { key: "fase3_2_compras", label: "Fase 3.2 - Compras", pct: 0.7 },
+  { key: "fase3_1", label: "Fase 3.1 - Ações sem Investimento", pct: 0.6 },
+  { key: "fase3_2", label: "Fase 3.2 - Ações com Investimento", pct: 0.6 },
+  { key: "fase3_2_compras", label: "Fase 3.2 - Compras", pct: 0.6 },
   { key: "fase4", label: "Fase 4 - Instalação", pct: 0.8 },
   { key: "fase5", label: "Fase 5 - Finalizado / Coletando Dados", pct: 0.9 },
 ];
