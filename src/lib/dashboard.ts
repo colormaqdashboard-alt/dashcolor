@@ -60,6 +60,8 @@ export type EnrichedProjeto = Projeto & {
   parado: boolean;
   pctConclusao: number;
   savingAprovadoEfetivo: number;
+  /** Saving previsto válido: 0 quando o projeto está "Inviabilizado". */
+  savingPrevistoEfetivo: number;
 };
 
 const parseDate = (v: string | null): Date | null => {
@@ -197,6 +199,11 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     pctConclusao: faseAtualPct,
     // Saving aprovado só conta quando validado pela controladoria.
     savingAprovadoEfetivo: validado ? Number(p.saving_aprovado) || 0 : 0,
+    // Saving previsto (12 meses) desconsidera projetos inviabilizados.
+    savingPrevistoEfetivo:
+      (p.status || "").trim().toLowerCase() === "inviabilizado"
+        ? 0
+        : Number(p.saving_previsto) || 0,
   };
 }
 
