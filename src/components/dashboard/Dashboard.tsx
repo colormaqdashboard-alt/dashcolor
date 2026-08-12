@@ -450,6 +450,17 @@ export default function Dashboard() {
     );
   }, [projetos]);
 
+  // Distribuição por Fase na Visão Geral: exclui "Inviabilizado" (mesmo critério do gráfico Percentual de Conclusão).
+  const distFasesVisao = useMemo(() => {
+    const m = new Map<string, number>();
+    projetos
+      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
+    return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
+      (a, b) => b.qtd - a.qtd
+    );
+  }, [projetos]);
+
   const distStatus = useMemo(() => {
     const m = new Map<string, number>();
     projetos.forEach((p) =>
