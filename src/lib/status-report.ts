@@ -245,7 +245,6 @@ export function generateStatusReportHTML(
 
     <section class="cards">
       <div class="card"><div class="ic ic-total">📊</div><div><div class="label">Total de Projetos</div><div class="value">${total}</div></div></div>
-      <div class="card"><div class="ic ic-ok">✅</div><div><div class="label">Em Dia</div><div class="value">${emDia}</div></div></div>
       <div class="card"><div class="ic ic-final">🏁</div><div><div class="label">Finalizados</div><div class="value">${finalizados}</div></div></div>
       <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔵</div><div><div class="label">Longa Duração</div><div class="value">${longaDuracao}</div></div></div>
       <div class="card"><div class="ic" style="background:#0f172a; color:#fff;">⚫</div><div><div class="label">Inviabilizados</div><div class="value">${inviabilizados}</div></div></div>
@@ -289,6 +288,20 @@ ${bodyRows}
   var ths = tbl.querySelectorAll('thead th');
   var tbody = tbl.querySelector('tbody');
   var state = { idx: -1, dir: 1 };
+  function syncSticky(){
+    var head = tbl.querySelectorAll('thead th');
+    var w1 = head[0].getBoundingClientRect().width;
+    var w2 = head[1].getBoundingClientRect().width;
+    var offsets = [0, w1, w1 + w2];
+    for (var c = 0; c < 3; c++) {
+      head[c].style.left = offsets[c] + 'px';
+      var cells = tbl.querySelectorAll('tbody tr > *:nth-child(' + (c + 1) + ')');
+      for (var k = 0; k < cells.length; k++) cells[k].style.left = offsets[c] + 'px';
+    }
+  }
+  syncSticky();
+  window.addEventListener('resize', syncSticky);
+  window.addEventListener('load', syncSticky);
   function parseDateBR(s){
     var m = s && s.match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})/);
     if(!m) return null;
