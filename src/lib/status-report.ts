@@ -71,7 +71,6 @@ export function generateStatusReportHTML(
   const geradoEm = now.toLocaleString("pt-BR");
   const total = rows.length;
   const finalizados = rows.filter((r) => r.atencaoOrder === 5).length;
-  const emDia = rows.filter((r) => r.atencaoOrder === 4).length;
   const longaDuracao = rows.filter((r) => r.atencaoOrder === 1).length;
   const inviabilizados = rows.filter((r) => r.atencaoOrder === 6).length;
 
