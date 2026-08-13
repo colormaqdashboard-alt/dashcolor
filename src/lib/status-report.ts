@@ -87,7 +87,7 @@ export function generateStatusReportHTML(
         <td class="col-projeto sticky-col sticky-1"><div class="proj-name">${escapeHtml(r.projeto)}</div><div class="proj-id">#${r.matricula}</div></td>
         <td class="sticky-col sticky-2">${escapeHtml(r.lider || "—")}</td>
         <td class="sticky-col sticky-3">${escapeHtml(r.gerente || "—")}</td>
-        <td class="nowrap" title="${escapeHtml(r.faseAtualFull)}">${escapeHtml(r.faseAtualShort || "—")}</td>
+        <td class="nowrap col-fase" title="${escapeHtml(r.faseAtualFull)}">${escapeHtml(r.faseAtualShort || "—")}</td>
         <td class="nowrap">${escapeHtml(fmtDateStr(r.ultimaFase))}</td>
         <td class="nowrap">${escapeHtml(fmtDateStr(r.prazo))}</td>
         <td class="num">${r.diasFase != null ? r.diasFase + " d" : "—"}</td>
@@ -167,7 +167,7 @@ export function generateStatusReportHTML(
   .table-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
   .table-head .count { color: var(--muted); font-size: 12px; }
 
-  .table-scroll { overflow: auto; max-height: 78vh; }
+  .table-scroll { overflow-x: auto; overflow-y: visible; }
   table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
   thead th { position: sticky; top: 0; background: #0f172a; color: #fff; text-align: left;
     font-weight: 600; font-size: 12px; letter-spacing: .02em; padding: 12px 14px; z-index: 3;
@@ -184,10 +184,11 @@ export function generateStatusReportHTML(
   .proj-id { color: var(--muted); font-size: 11px; margin-top: 2px; }
 
   .sticky-col { position: sticky; background: #fff; z-index: 2; }
-  .sticky-1 { left: 0; min-width: 240px; max-width: 260px; width: 260px; }
-  .sticky-2 { left: 260px; min-width: 150px; width: 150px; }
-  .sticky-3 { left: 410px; min-width: 150px; width: 150px;
+  .sticky-1 { left: 0; min-width: 240px; width: 240px; }
+  .sticky-2 { left: 240px; min-width: 150px; width: 150px; }
+  .sticky-3 { left: 390px; min-width: 150px; width: 150px;
     box-shadow: 2px 0 4px rgba(15,23,42,.10); }
+  th[data-key="fase"], td.col-fase { min-width: 150px; }
   tbody tr:nth-child(even) td.sticky-col { background: #f8fafc; }
   tbody tr:hover td.sticky-col { background: #eef4ff; }
   thead th.sticky-col { z-index: 4; background: #0f172a; }
