@@ -52,17 +52,30 @@ function atencaoBadgeHtml(label: string): string {
 
 export function generateStatusReportHTML(
   rows: StatusReportRow[],
-  opts: { logoDataUri?: string | null; selectedManagers: number; totalManagers: number },
+  opts: {
+    logoDataUri?: string | null;
+    selectedManagers: number;
+    totalManagers: number;
+    faseCounts?: {
+      novos: number;
+      p0: number;
+      p20: number;
+      p40: number;
+      p60: number;
+      p80: number;
+      p90: number;
+    };
+  },
 ): string {
   const now = new Date();
   const geradoEm = now.toLocaleString("pt-BR");
   const total = rows.length;
   const finalizados = rows.filter((r) => r.atencaoOrder === 5).length;
-  const atrasados = rows.filter((r) => r.atencaoOrder === 0).length;
-  const possivelAtraso = rows.filter((r) => r.atencaoOrder === 2 || r.atencaoOrder === 3).length;
   const emDia = rows.filter((r) => r.atencaoOrder === 4).length;
   const longaDuracao = rows.filter((r) => r.atencaoOrder === 1).length;
   const inviabilizados = rows.filter((r) => r.atencaoOrder === 6).length;
+
+  const fc = opts.faseCounts ?? { novos: 0, p0: 0, p20: 0, p40: 0, p60: 0, p80: 0, p90: 0 };
 
   const logoHtml = opts.logoDataUri
     ? `<img src="${opts.logoDataUri}" alt="Logo" class="logo-img" />`
@@ -71,9 +84,9 @@ export function generateStatusReportHTML(
   const bodyRows = rows
     .map((r) => {
       return `<tr>
-        <td class="col-projeto sticky-col"><div class="proj-name">${escapeHtml(r.projeto)}</div><div class="proj-id">#${r.matricula}</div></td>
-        <td>${escapeHtml(r.lider || "—")}</td>
-        <td>${escapeHtml(r.gerente || "—")}</td>
+        <td class="col-projeto sticky-col sticky-1"><div class="proj-name">${escapeHtml(r.projeto)}</div><div class="proj-id">#${r.matricula}</div></td>
+        <td class="sticky-col sticky-2">${escapeHtml(r.lider || "—")}</td>
+        <td class="sticky-col sticky-3">${escapeHtml(r.gerente || "—")}</td>
         <td class="nowrap" title="${escapeHtml(r.faseAtualFull)}">${escapeHtml(r.faseAtualShort || "—")}</td>
         <td class="nowrap">${escapeHtml(fmtDateStr(r.ultimaFase))}</td>
         <td class="nowrap">${escapeHtml(fmtDateStr(r.prazo))}</td>
@@ -170,11 +183,14 @@ export function generateStatusReportHTML(
   .proj-name { font-weight: 600; color: var(--text); }
   .proj-id { color: var(--muted); font-size: 11px; margin-top: 2px; }
 
-  .sticky-col { position: sticky; left: 0; background: #fff; z-index: 2; min-width: 240px; max-width: 320px;
-    box-shadow: 1px 0 0 0 var(--border); }
+  .sticky-col { position: sticky; background: #fff; z-index: 2; }
+  .sticky-1 { left: 0; min-width: 240px; max-width: 260px; width: 260px; }
+  .sticky-2 { left: 260px; min-width: 150px; width: 150px; }
+  .sticky-3 { left: 410px; min-width: 150px; width: 150px;
+    box-shadow: 2px 0 4px rgba(15,23,42,.10); }
   tbody tr:nth-child(even) td.sticky-col { background: #f8fafc; }
   tbody tr:hover td.sticky-col { background: #eef4ff; }
-  thead th.sticky-col { left: 0; z-index: 4; background: #0f172a; }
+  thead th.sticky-col { z-index: 4; background: #0f172a; }
 
   .badge, .att { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
     border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -217,10 +233,18 @@ export function generateStatusReportHTML(
     </header>
 
     <section class="cards">
+      <div class="card"><div class="ic ic-total">🆕</div><div><div class="label">Novos Projetos</div><div class="value">${fc.novos}</div></div></div>
+      <div class="card"><div class="ic ic-final">⏸️</div><div><div class="label">Não iniciado</div><div class="value">${fc.p0}</div></div></div>
+      <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔎</div><div><div class="label">1ª Fase</div><div class="value">${fc.p20}</div></div></div>
+      <div class="card"><div class="ic ic-total">📊</div><div><div class="label">2ª Fase</div><div class="value">${fc.p40}</div></div></div>
+      <div class="card"><div class="ic ic-warn">⚙️</div><div><div class="label">3ª Fase</div><div class="value">${fc.p60}</div></div></div>
+      <div class="card"><div class="ic ic-orange" style="background:var(--orange-soft); color:var(--orange);">🛠️</div><div><div class="label">4ª Fase</div><div class="value">${fc.p80}</div></div></div>
+      <div class="card"><div class="ic ic-ok">✅</div><div><div class="label">5ª Fase</div><div class="value">${fc.p90}</div></div></div>
+    </section>
+
+    <section class="cards">
       <div class="card"><div class="ic ic-total">📊</div><div><div class="label">Total de Projetos</div><div class="value">${total}</div></div></div>
       <div class="card"><div class="ic ic-ok">✅</div><div><div class="label">Em Dia</div><div class="value">${emDia}</div></div></div>
-      <div class="card"><div class="ic ic-warn">⚠️</div><div><div class="label">Possível Atraso</div><div class="value">${possivelAtraso}</div></div></div>
-      <div class="card"><div class="ic ic-danger">🔴</div><div><div class="label">Atrasados</div><div class="value">${atrasados}</div></div></div>
       <div class="card"><div class="ic ic-final">🏁</div><div><div class="label">Finalizados</div><div class="value">${finalizados}</div></div></div>
       <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔵</div><div><div class="label">Longa Duração</div><div class="value">${longaDuracao}</div></div></div>
       <div class="card"><div class="ic" style="background:#0f172a; color:#fff;">⚫</div><div><div class="label">Inviabilizados</div><div class="value">${inviabilizados}</div></div></div>
@@ -235,9 +259,9 @@ export function generateStatusReportHTML(
         <table id="tbl">
           <thead>
             <tr>
-              <th class="sticky-col" data-key="projeto" data-type="text">Projeto <span class="arrow">↕</span></th>
-              <th data-key="lider" data-type="text">Líder <span class="arrow">↕</span></th>
-              <th data-key="gerente" data-type="text">Gerente <span class="arrow">↕</span></th>
+              <th class="sticky-col sticky-1" data-key="projeto" data-type="text">Projeto <span class="arrow">↕</span></th>
+              <th class="sticky-col sticky-2" data-key="lider" data-type="text">Líder <span class="arrow">↕</span></th>
+              <th class="sticky-col sticky-3" data-key="gerente" data-type="text">Gerente <span class="arrow">↕</span></th>
               <th data-key="fase" data-type="text">Fase Atual <span class="arrow">↕</span></th>
               <th data-key="uf" data-type="date">Última fase iniciada <span class="arrow">↕</span></th>
               <th data-key="prazo" data-type="date">Prazo da ação <span class="arrow">↕</span></th>
