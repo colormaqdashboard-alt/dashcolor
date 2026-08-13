@@ -166,7 +166,7 @@ export function generateStatusReportHTML(
   .table-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
   .table-head .count { color: var(--muted); font-size: 12px; }
 
-  .table-scroll { overflow-x: auto; overflow-y: visible; }
+  .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 430px; }
   table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
   thead th { position: sticky; top: 0; background: #0f172a; color: #fff; text-align: left;
     font-weight: 600; font-size: 12px; letter-spacing: .02em; padding: 12px 14px; z-index: 3;
