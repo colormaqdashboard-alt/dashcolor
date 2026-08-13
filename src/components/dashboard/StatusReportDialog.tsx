@@ -21,9 +21,18 @@ type Props = {
   onOpenChange: (v: boolean) => void;
   rows: StatusReportRow[];
   logoDataUri: string | null;
+  faseCounts?: {
+    novos: number;
+    p0: number;
+    p20: number;
+    p40: number;
+    p60: number;
+    p80: number;
+    p90: number;
+  };
 };
 
-export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri }: Props) {
+export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, faseCounts }: Props) {
   const managers = useMemo(() => {
     const set = new Set<string>();
     rows.forEach((r) => set.add(r.gerente || "— Sem gerente —"));
@@ -57,6 +66,7 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri }: Pr
       logoDataUri,
       selectedManagers: selectedCount,
       totalManagers: managers.length,
+      faseCounts,
     });
     const stamp = new Date()
       .toISOString()
