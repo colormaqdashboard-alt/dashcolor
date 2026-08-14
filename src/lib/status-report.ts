@@ -75,6 +75,7 @@ export function generateStatusReportHTML(
   const finalizados = rows.filter((r) => r.atencaoOrder === 5).length;
   const longaDuracao = rows.filter((r) => r.atencaoOrder === 1).length;
   const inviabilizados = rows.filter((r) => r.atencaoOrder === 6).length;
+  const allManagersSelected = opts.selectedManagers === opts.totalManagers;
 
   const fc =
     opts.faseCounts ?? { novos: 0, p0: 0, p20: 0, p40: 0, p60: 0, p80: 0, p90: 0, emValidacao: 0 };
