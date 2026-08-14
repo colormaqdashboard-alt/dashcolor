@@ -1723,6 +1723,7 @@ export default function Dashboard() {
                   status: p.status || "",
                   atencaoLabel: atencao.label,
                   atencaoOrder: atencao.order,
+                  pctConclusao: p.pctConclusao,
                 }),
               )}
             />
