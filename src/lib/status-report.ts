@@ -15,6 +15,7 @@ export type StatusReportRow = {
   status: string;
   atencaoLabel: string;
   atencaoOrder: number;
+  pctConclusao: number;
 };
 
 const escapeHtml = (s: string) =>
@@ -64,6 +65,7 @@ export function generateStatusReportHTML(
       p60: number;
       p80: number;
       p90: number;
+      emValidacao: number;
     };
   },
 ): string {
@@ -74,7 +76,8 @@ export function generateStatusReportHTML(
   const longaDuracao = rows.filter((r) => r.atencaoOrder === 1).length;
   const inviabilizados = rows.filter((r) => r.atencaoOrder === 6).length;
 
-  const fc = opts.faseCounts ?? { novos: 0, p0: 0, p20: 0, p40: 0, p60: 0, p80: 0, p90: 0 };
+  const fc =
+    opts.faseCounts ?? { novos: 0, p0: 0, p20: 0, p40: 0, p60: 0, p80: 0, p90: 0, emValidacao: 0 };
 
   const logoHtml = opts.logoDataUri
     ? `<img src="${opts.logoDataUri}" alt="Logo" class="logo-img" />`
@@ -240,6 +243,7 @@ export function generateStatusReportHTML(
       <div class="card"><div class="ic ic-warn">⚙️</div><div><div class="label">3ª Fase</div><div class="value">${fc.p60}</div></div></div>
       <div class="card"><div class="ic ic-orange" style="background:var(--orange-soft); color:var(--orange);">🛠️</div><div><div class="label">4ª Fase</div><div class="value">${fc.p80}</div></div></div>
       <div class="card"><div class="ic ic-ok">✅</div><div><div class="label">5ª Fase</div><div class="value">${fc.p90}</div></div></div>
+      <div class="card"><div class="ic" style="background:#f3e8ff; color:#7e22ce;">🟣</div><div><div class="label">Em validação pela controladoria</div><div class="value">${fc.emValidacao}</div></div></div>
     </section>
 
     <section class="cards">
