@@ -1706,15 +1706,7 @@ export default function Dashboard() {
               open={reportOpen}
               onOpenChange={setReportOpen}
               logoDataUri={reportLogo}
-              faseCounts={{
-                novos: distPctConclusao.find((d) => d.order === -1)?.qtd ?? 0,
-                p0: distPctConclusao.find((d) => d.order === 0)?.qtd ?? 0,
-                p20: distPctConclusao.find((d) => d.order === 20)?.qtd ?? 0,
-                p40: distPctConclusao.find((d) => d.order === 40)?.qtd ?? 0,
-                p60: distPctConclusao.find((d) => d.order === 60)?.qtd ?? 0,
-                p80: distPctConclusao.find((d) => d.order === 80)?.qtd ?? 0,
-                p90: distPctConclusao.find((d) => d.order === 90)?.qtd ?? 0,
-              }}
+              novosTotal={source.novosProjetos.length}
               rows={statusProjetos.map(
                 ({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }): StatusReportRow => ({
                   matricula: p.matricula,
