@@ -237,21 +237,21 @@ export function generateStatusReportHTML(
     </header>
 
     <section class="cards">
-      <div class="card"><div class="ic ic-total">🆕</div><div><div class="label">Novos Projetos</div><div class="value">${fc.novos}</div></div></div>
+      <div class="card"><div class="ic ic-total">📊</div><div><div class="label">Total de Projetos</div><div class="value">${total}</div></div></div>
+      <div class="card"><div class="ic" style="background:#f3e8ff; color:#7e22ce;">🟣</div><div><div class="label">Em validação pela controladoria</div><div class="value">${fc.emValidacao}</div></div></div>
+      <div class="card"><div class="ic ic-final">🏁</div><div><div class="label">Finalizados</div><div class="value">${finalizados}</div></div></div>
+      <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔵</div><div><div class="label">Longa Duração</div><div class="value">${longaDuracao}</div></div></div>
+      <div class="card"><div class="ic" style="background:#0f172a; color:#fff;">⚫</div><div><div class="label">Inviabilizados</div><div class="value">${inviabilizados}</div></div></div>
+    </section>
+
+    <section class="cards">
+      ${allManagersSelected ? `<div class="card"><div class="ic ic-total">🆕</div><div><div class="label">Novos Projetos</div><div class="value">${fc.novos}</div></div></div>` : ""}
       <div class="card"><div class="ic ic-final">⏸️</div><div><div class="label">Não iniciado</div><div class="value">${fc.p0}</div></div></div>
       <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔎</div><div><div class="label">1ª Fase</div><div class="value">${fc.p20}</div></div></div>
       <div class="card"><div class="ic ic-total">📊</div><div><div class="label">2ª Fase</div><div class="value">${fc.p40}</div></div></div>
       <div class="card"><div class="ic ic-warn">⚙️</div><div><div class="label">3ª Fase</div><div class="value">${fc.p60}</div></div></div>
       <div class="card"><div class="ic ic-orange" style="background:var(--orange-soft); color:var(--orange);">🛠️</div><div><div class="label">4ª Fase</div><div class="value">${fc.p80}</div></div></div>
       <div class="card"><div class="ic ic-ok">✅</div><div><div class="label">5ª Fase</div><div class="value">${fc.p90}</div></div></div>
-      <div class="card"><div class="ic" style="background:#f3e8ff; color:#7e22ce;">🟣</div><div><div class="label">Em validação pela controladoria</div><div class="value">${fc.emValidacao}</div></div></div>
-    </section>
-
-    <section class="cards">
-      <div class="card"><div class="ic ic-total">📊</div><div><div class="label">Total de Projetos</div><div class="value">${total}</div></div></div>
-      <div class="card"><div class="ic ic-final">🏁</div><div><div class="label">Finalizados</div><div class="value">${finalizados}</div></div></div>
-      <div class="card"><div class="ic ic-info" style="background:var(--info-soft); color:var(--info);">🔵</div><div><div class="label">Longa Duração</div><div class="value">${longaDuracao}</div></div></div>
-      <div class="card"><div class="ic" style="background:#0f172a; color:#fff;">⚫</div><div><div class="label">Inviabilizados</div><div class="value">${inviabilizados}</div></div></div>
     </section>
 
     <section class="table-card">
