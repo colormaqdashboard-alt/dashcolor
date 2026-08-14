@@ -21,18 +21,10 @@ type Props = {
   onOpenChange: (v: boolean) => void;
   rows: StatusReportRow[];
   logoDataUri: string | null;
-  faseCounts?: {
-    novos: number;
-    p0: number;
-    p20: number;
-    p40: number;
-    p60: number;
-    p80: number;
-    p90: number;
-  };
+  novosTotal?: number;
 };
 
-export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, faseCounts }: Props) {
+export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, novosTotal = 0 }: Props) {
   const managers = useMemo(() => {
     const set = new Set<string>();
     rows.forEach((r) => set.add(r.gerente || "— Sem gerente —"));
@@ -60,6 +52,26 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, fase
     () => rows.filter((r) => selected[r.gerente || "— Sem gerente —"]),
     [rows, selected],
   );
+
+  const faseCounts = useMemo(() => {
+    const base = filtered.filter(
+      (r) => (r.status || "").trim().toLowerCase() !== "inviabilizado",
+    );
+    const cnt = (pct: number) =>
+      base.filter((r) => Math.round(r.pctConclusao * 100) === pct).length;
+    return {
+      novos: novosTotal,
+      p0: cnt(0),
+      p20: cnt(20),
+      p40: cnt(40),
+      p60: cnt(60),
+      p80: cnt(80),
+      p90: cnt(90),
+      emValidacao: filtered.filter(
+        (r) => (r.status || "").trim().toLowerCase() === "em validação pela controladoria",
+      ).length,
+    };
+  }, [filtered, novosTotal]);
 
   const handleGenerate = () => {
     const html = generateStatusReportHTML(filtered, {
