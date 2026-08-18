@@ -80,6 +80,7 @@ import { PainelEstrategicoROI } from "./PainelEstrategicoROI";
 import { StatusReportDialog } from "./StatusReportDialog";
 import { PerformanceExecutivoPanel } from "./PerformanceExecutivoPanel";
 import { NovosProjetosPanel } from "./NovosProjetosPanel";
+import { DiretoriaPanel } from "./DiretoriaPanel";
 import type { StatusReportRow } from "@/lib/status-report";
 
 const ALL = "__all__";
@@ -801,6 +802,30 @@ export default function Dashboard() {
       );
   }, [projetos]);
 
+  const statusReportRows = useMemo<StatusReportRow[]>(
+    () =>
+      statusProjetos.map(
+        ({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }) => ({
+          matricula: p.matricula,
+          projeto: p.projeto,
+          lider: p.lider || "",
+          gerente: p.gerente || "",
+          faseAtualShort: faseAtual?.short || "",
+          faseAtualFull: faseAtual?.full || "",
+          ultimaFase,
+          prazo,
+          ultimaAtualizacao,
+          diasFase,
+          diasAtualizacao,
+          status: p.status || "",
+          atencaoLabel: atencao.label,
+          atencaoOrder: atencao.order,
+          pctConclusao: p.pctConclusao,
+        }),
+      ),
+    [statusProjetos],
+  );
+
   const distPctConclusao = useMemo(() => {
     const m = new Map<number, number>();
     projetos
@@ -1122,6 +1147,7 @@ export default function Dashboard() {
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
+            <TabsTrigger value="diretoria">Diretoria</TabsTrigger>
             <TabsTrigger value="projetos">Projetos</TabsTrigger>
             <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
           </TabsList>
@@ -1707,25 +1733,15 @@ export default function Dashboard() {
               onOpenChange={setReportOpen}
               logoDataUri={reportLogo}
               novosTotal={source.novosProjetos.length}
-              rows={statusProjetos.map(
-                ({ p, ultimaFase, prazo, ultimaAtualizacao, diasFase, diasAtualizacao, atencao, faseAtual }): StatusReportRow => ({
-                  matricula: p.matricula,
-                  projeto: p.projeto,
-                  lider: p.lider || "",
-                  gerente: p.gerente || "",
-                  faseAtualShort: faseAtual?.short || "",
-                  faseAtualFull: faseAtual?.full || "",
-                  ultimaFase,
-                  prazo,
-                  ultimaAtualizacao,
-                  diasFase,
-                  diasAtualizacao,
-                  status: p.status || "",
-                  atencaoLabel: atencao.label,
-                  atencaoOrder: atencao.order,
-                  pctConclusao: p.pctConclusao,
-                }),
-              )}
+              rows={statusReportRows}
+            />
+          </TabsContent>
+
+          {/* DIRETORIA */}
+          <TabsContent value="diretoria" className="mt-4 space-y-4">
+            <DiretoriaPanel
+              rows={statusReportRows}
+              novosTotal={source.novosProjetos.length}
             />
           </TabsContent>
 
