@@ -1141,6 +1141,7 @@ export default function Dashboard() {
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
             <TabsTrigger value="pessoas">Pessoas</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="painel-roi">Painel Estratégico de ROI</TabsTrigger>
@@ -1148,8 +1149,6 @@ export default function Dashboard() {
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
             <TabsTrigger value="diretoria">Diretoria</TabsTrigger>
-            <TabsTrigger value="projetos">Projetos</TabsTrigger>
-            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
           </TabsList>
 
           {/* VISÃO GERAL */}
