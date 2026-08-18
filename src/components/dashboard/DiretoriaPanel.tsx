@@ -133,18 +133,18 @@ export function DiretoriaPanel({ rows, novosTotal = 0 }: Props) {
                 return (
                   <li key={m} className="flex items-center justify-between gap-3 px-2 py-2">
                     <div className="flex items-center gap-2">
-                      <span className={on ? "text-success" : "text-muted-foreground"}>
+                      <button
+                        type="button"
+                        onClick={() => setUnselected((prev) => ({ ...prev, [m]: !prev[m] }))}
+                        className={`text-lg leading-none transition-colors ${on ? "text-success" : "text-muted-foreground"}`}
+                        aria-label={on ? `Desmarcar ${m}` : `Selecionar ${m}`}
+                        title={on ? "Selecionado" : "Não selecionado"}
+                      >
                         {on ? "🟢" : "⚪"}
-                      </span>
+                      </button>
                       <span className="text-sm font-medium">{m}</span>
                       <span className="text-xs text-muted-foreground">({count})</span>
                     </div>
-                    <Switch
-                      checked={on}
-                      onCheckedChange={(v) =>
-                        setUnselected((prev) => ({ ...prev, [m]: !v }))
-                      }
-                    />
                   </li>
                 );
               })}
