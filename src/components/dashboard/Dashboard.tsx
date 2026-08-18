@@ -1141,6 +1141,7 @@ export default function Dashboard() {
         <Tabs defaultValue="visao" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
             <TabsTrigger value="pessoas">Pessoas</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="painel-roi">Painel Estratégico de ROI</TabsTrigger>
@@ -1148,8 +1149,6 @@ export default function Dashboard() {
             <TabsTrigger value="ranking">Ranking de Projetos</TabsTrigger>
             <TabsTrigger value="status">Status dos Projetos</TabsTrigger>
             <TabsTrigger value="diretoria">Diretoria</TabsTrigger>
-            <TabsTrigger value="projetos">Projetos</TabsTrigger>
-            <TabsTrigger value="novos">Novos Projetos</TabsTrigger>
           </TabsList>
 
           {/* VISÃO GERAL */}
@@ -1745,46 +1744,6 @@ export default function Dashboard() {
             />
           </TabsContent>
 
-          {/* TABELA COMPLETA */}
-          <TabsContent value="projetos" className="mt-4">
-            <SectionCard title="Lista de Projetos" description={`${projetos.length} projetos filtrados`}>
-              <div className="max-h-[640px] overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
-                    <TableRow>
-                      <TableHead>Projeto</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Setor</TableHead>
-                      <TableHead>Líder</TableHead>
-                      <TableHead>Gerente</TableHead>
-                      <TableHead>Fase</TableHead>
-                      <TableHead className="text-right">Saving Prev.</TableHead>
-                      <TableHead className="text-right">Investimento</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {projetos.map((p) => (
-                      <TableRow key={p.matricula} className={p.atrasado ? "bg-destructive/5" : p.concluido ? "bg-success/5" : undefined}>
-                        <TableCell className="max-w-[280px]">
-                          <div className="truncate font-medium">{p.projeto}</div>
-                          <div className="text-xs text-muted-foreground">#{p.matricula}</div>
-                        </TableCell>
-                        <TableCell className="text-sm">{p.tipo || "—"}</TableCell>
-                        <TableCell className="text-sm">{p.setor || "—"}</TableCell>
-                        <TableCell className="text-sm">{p.lider || "—"}</TableCell>
-                        <TableCell className="text-sm">{p.gerente || "—"}</TableCell>
-                        <TableCell className="text-xs">{p.faseAtual}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmtMoney(p.saving_previsto)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmtMoney(p.investimento)}</TableCell>
-                        <TableCell>{statusBadge(p)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </SectionCard>
-          </TabsContent>
 
           {/* NOVOS PROJETOS (aba independente da carteira) */}
           <TabsContent value="novos" className="mt-4 space-y-4">
