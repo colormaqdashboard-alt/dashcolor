@@ -228,3 +228,8 @@ export function pareto<T extends { value: number; label: string }>(items: T[]) {
     return { ...x, acumulado: (acc / total) * 100 };
   });
 }
+/**
+ * Meta gerencial oficial do DashColor (fonte única de verdade).
+ * Usada quando nenhum gerente específico está filtrado.
+ */
+export const META_GERENCIAL_TOTAL = 10_000_000;
