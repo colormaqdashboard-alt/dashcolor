@@ -54,7 +54,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const ALL = "__all__";
-const META_TOTAL_FIXO = 8_000_000;
 
 type Props = {
   all: EnrichedProjeto[];
@@ -160,7 +159,7 @@ export function PerformanceExecutivoPanel({
   }, [projetos]);
 
   const metaGerencial = useMemo(() => {
-    if (fGerente === ALL) return META_TOTAL_FIXO;
+    if (fGerente === ALL) return META_GERENCIAL_TOTAL;
     const m = (metas || [])
       .filter((x) => (x.gerente || "").trim() === fGerente)
       .reduce((s, x) => s + (Number(x.meta) || 0), 0);
