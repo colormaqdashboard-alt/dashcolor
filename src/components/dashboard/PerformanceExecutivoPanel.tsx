@@ -414,7 +414,7 @@ export function PerformanceExecutivoPanel({
                 {metaGerencial > 0 ? fmtPct(pctMeta) : "—"}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                do total previsto
+                do saving aprovado pela controladoria
               </div>
             </div>
           </CardContent>
