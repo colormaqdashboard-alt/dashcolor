@@ -36,6 +36,7 @@ import {
   computePaybackValidado,
   fmtPayback,
   paybackToneClass,
+  META_GERENCIAL_TOTAL,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
 import { Infinity as InfinityIcon } from "lucide-react";
