@@ -36,6 +36,7 @@ import {
   computePaybackValidado,
   fmtPayback,
   paybackToneClass,
+  META_GERENCIAL_TOTAL,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
 import { Infinity as InfinityIcon } from "lucide-react";
@@ -53,7 +54,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const ALL = "__all__";
-const META_TOTAL_FIXO = 8_000_000;
 
 type Props = {
   all: EnrichedProjeto[];
@@ -159,7 +159,7 @@ export function PerformanceExecutivoPanel({
   }, [projetos]);
 
   const metaGerencial = useMemo(() => {
-    if (fGerente === ALL) return META_TOTAL_FIXO;
+    if (fGerente === ALL) return META_GERENCIAL_TOTAL;
     const m = (metas || [])
       .filter((x) => (x.gerente || "").trim() === fGerente)
       .reduce((s, x) => s + (Number(x.meta) || 0), 0);
@@ -414,7 +414,7 @@ export function PerformanceExecutivoPanel({
                 {metaGerencial > 0 ? fmtPct(pctMeta) : "—"}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                do total previsto
+                do saving aprovado pela controladoria
               </div>
             </div>
           </CardContent>

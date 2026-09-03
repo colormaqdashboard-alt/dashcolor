@@ -120,7 +120,7 @@ export function exportRankingXLSX(kind: RankingKind, rows: EnrichedProjeto[]) {
       p.gerente || "—",
       p.faseAtual,
       p.status || "—",
-      Number(p.saving_previsto) || 0,
+      p.savingPrevistoEfetivo,
       p.savingAprovadoEfetivo,
       Number(p.investimento) || 0,
     ]);
@@ -180,7 +180,7 @@ export function exportRankingHTML(kind: RankingKind, rows: EnrichedProjeto[]) {
         <td>${escapeHTML(p.gerente || "—")}</td>
         <td>${escapeHTML(p.faseAtual)}</td>
         <td>${escapeHTML(p.status || "—")}</td>
-        <td class="num${meta.metricKey === "saving_previsto" ? " hl" : ""}">${fmtMoney(p.saving_previsto)}</td>
+        <td class="num${meta.metricKey === "saving_previsto" ? " hl" : ""}">${fmtMoney(p.savingPrevistoEfetivo)}</td>
         <td class="num${meta.metricKey === "savingAprovadoEfetivo" ? " hl" : ""}">${fmtMoney(p.savingAprovadoEfetivo)}</td>
         <td class="num${meta.metricKey === "investimento" ? " hl" : ""}">${fmtMoney(p.investimento)}</td>
       </tr>`,
