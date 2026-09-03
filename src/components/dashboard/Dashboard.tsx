@@ -1945,7 +1945,7 @@ function RankingTable({
                   <TableCell className="text-xs">{p.faseAtual}</TableCell>
                   <TableCell>{statusBadge(p)}</TableCell>
                   <TableCell className={`text-right tabular-nums ${highlight === "saving_previsto" ? "font-semibold" : ""}`}>
-                    {fmtMoney(p.saving_previsto)}
+                    {fmtMoney(p.savingPrevistoEfetivo)}
                   </TableCell>
                   <TableCell className={`text-right tabular-nums ${highlight === "savingAprovadoEfetivo" ? "font-semibold" : ""}`}>
                     {fmtMoney(p.savingAprovadoEfetivo)}
