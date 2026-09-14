@@ -48,6 +48,39 @@ export const FASE_ORDER: { key: keyof Projeto; label: string; pct: number }[] = 
   { key: "fase5", label: "Fase 5 - Finalizado / Coletando Dados", pct: 0.9 },
 ];
 
+/* =======================================================================
+ * REGRAS CENTRAIS DE STATUS (fonte única de verdade — coluna W)
+ * ===================================================================== */
+export const norm = (s: string | null | undefined) => (s || "").trim().toLowerCase();
+export const isValidadoControladoria = (status: string | null | undefined) =>
+  norm(status) === "validado pela controladoria";
+export const isEmValidacaoControladoria = (status: string | null | undefined) =>
+  norm(status) === "em validação pela controladoria";
+export const isInviabilizado = (status: string | null | undefined) =>
+  norm(status) === "inviabilizado";
+
+/** Percentual oficial da 5ª Fase. */
+export const PCT_QUINTA_FASE = 90;
+
+/**
+ * REGRA OFICIAL DA 5ª FASE (quantidade apresentada):
+ * um projeto na 5ª fase só é contabilizado quando NÃO estiver
+ * "Em validação pela controladoria".
+ * A fase real e o status do projeto permanecem inalterados.
+ */
+export function contaNaQuintaFase(
+  pctConclusao: number,
+  status: string | null | undefined,
+): boolean {
+  return (
+    Math.round(pctConclusao * 100) === PCT_QUINTA_FASE &&
+    !isEmValidacaoControladoria(status)
+  );
+}
+
+/** Rótulo de fase (faseAtual) considerado 5ª fase. */
+export const isFase5Label = (faseAtual: string) => faseAtual.startsWith("Fase 5");
+
 export type EnrichedProjeto = Projeto & {
   faseAtual: string;
   faseAtualPct: number;
