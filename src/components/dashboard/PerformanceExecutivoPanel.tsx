@@ -141,12 +141,18 @@ export function PerformanceExecutivoPanel({
   const totals = useMemo(() => {
     const gerentes = uniq(projetos.map((p) => p.gerente)).length;
     const lideres = uniq(projetos.map((p) => p.lider)).length;
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo os validados pela controladoria.
     const savingPrev = projetos.reduce(
-      (s, p) => s + p.savingPrevistoEfetivo,
+      (s, p) => s + p.savingPrevistoPendente,
       0,
     );
     const savingAprov = projetos.reduce(
       (s, p) => s + p.savingAprovadoEfetivo,
+      0,
+    );
+    // Coluna Q dos projetos "Validado pela controladoria".
+    const previstoValidados = projetos.reduce(
+      (s, p) => s + p.totalPrevistoValidado,
       0,
     );
     return {
@@ -155,6 +161,7 @@ export function PerformanceExecutivoPanel({
       projetos: projetos.length,
       savingPrev,
       savingAprov,
+      previstoValidados,
     };
   }, [projetos]);
 
