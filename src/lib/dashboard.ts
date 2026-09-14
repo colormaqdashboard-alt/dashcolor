@@ -95,6 +95,21 @@ export type EnrichedProjeto = Projeto & {
   savingAprovadoEfetivo: number;
   /** Saving previsto válido: 0 quando o projeto está "Inviabilizado". */
   savingPrevistoEfetivo: number;
+  /**
+   * Saving previsto apresentado no card "Saving Previsto (12 meses)":
+   * usa a COLUNA P e zera projetos "Inviabilizado" e "Validado pela controladoria"
+   * (o previsto do validado é subtraído do total apresentado).
+   */
+  savingPrevistoPendente: number;
+  /**
+   * Card "Total de Valores Previstos dos Projetos Validados":
+   * COLUNA Q, somente projetos "Validado pela controladoria".
+   */
+  totalPrevistoValidado: number;
+  /** true quando o status é "Em validação pela controladoria". */
+  emValidacaoControladoria: boolean;
+  /** true quando o projeto deve ser contabilizado na quantidade da 5ª Fase. */
+  contaQuintaFase: boolean;
 };
 
 const parseDate = (v: string | null): Date | null => {
