@@ -69,11 +69,17 @@ type IconCardProps = {
   label: string;
   value: React.ReactNode;
   valueClass?: string;
+  cardClass?: string;
 };
 
-function IconCard({ icon, iconBg, label, value, valueClass }: IconCardProps) {
+function IconCard({ icon, iconBg, label, value, valueClass, cardClass }: IconCardProps) {
   return (
-    <Card className="shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-elev)]">
+    <Card
+      className={cn(
+        "shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-elev)]",
+        cardClass,
+      )}
+    >
       <CardContent className="flex items-center gap-4 p-4 sm:p-5">
         <div
           className={cn(
