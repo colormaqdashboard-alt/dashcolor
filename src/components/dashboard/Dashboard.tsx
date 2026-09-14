@@ -408,9 +408,12 @@ export default function Dashboard() {
     const finalizados = projetos.filter(
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
-    const savingPrev = projetos.reduce((s, p) => s + p.savingPrevistoEfetivo, 0);
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo os validados pela controladoria.
+    const savingPrev = projetos.reduce((s, p) => s + p.savingPrevistoPendente, 0);
     // Saving aprovado: SOMENTE projetos com status "Validado pela controladoria" (coluna W).
     const savingAprov = projetos.reduce((s, p) => s + p.savingAprovadoEfetivo, 0);
+    // Total de valores previstos dos projetos validados: coluna Q dos validados.
+    const previstoValidados = projetos.reduce((s, p) => s + p.totalPrevistoValidado, 0);
     const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
     const pctMedio =
       projetos.length === 0
