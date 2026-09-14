@@ -426,6 +426,7 @@ export default function Dashboard() {
       finalizados: finalizados.length,
       savingPrev,
       savingAprov,
+      previstoValidados,
       investimento,
       pctMedio,
     };
@@ -445,9 +446,15 @@ export default function Dashboard() {
     return { tempoMedio, atrasados, noPrazo, semPrazo };
   }, [projetos]);
 
+  // REGRA 5ª FASE: projetos na 5ª fase "Em validação pela controladoria" não são contabilizados.
+  const contabilizaFase = (p: EnrichedProjeto) =>
+    !isFase5Label(p.faseAtual) || p.contaQuintaFase;
+
   const distFases = useMemo(() => {
     const m = new Map<string, number>();
-    projetos.forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
+    projetos
+      .filter(contabilizaFase)
+      .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
     return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
       (a, b) => b.qtd - a.qtd
     );
@@ -457,7 +464,7 @@ export default function Dashboard() {
   const distFasesVisao = useMemo(() => {
     const m = new Map<string, number>();
     projetos
-      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .filter((p) => !isInviabilizado(p.status) && contabilizaFase(p))
       .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
     return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
       (a, b) => b.qtd - a.qtd
