@@ -60,6 +60,10 @@ import {
   fmtPct,
   pareto,
   uniq,
+  isFase5Label,
+  isInviabilizado,
+  isEmValidacaoControladoria,
+  contaNaQuintaFase,
   type Projeto,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
