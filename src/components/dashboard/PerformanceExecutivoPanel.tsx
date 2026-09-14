@@ -193,7 +193,7 @@ export function PerformanceExecutivoPanel({
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
-        previsto: lista.reduce((s, p) => s + p.savingPrevistoEfetivo, 0),
+        previsto: lista.reduce((s, p) => s + p.savingPrevistoPendente, 0),
         aprovado: lista.reduce((s, p) => s + p.savingAprovadoEfetivo, 0),
         meta: metaByGerente.get(g) || 0,
       };
