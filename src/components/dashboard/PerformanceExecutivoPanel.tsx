@@ -69,11 +69,17 @@ type IconCardProps = {
   label: string;
   value: React.ReactNode;
   valueClass?: string;
+  cardClass?: string;
 };
 
-function IconCard({ icon, iconBg, label, value, valueClass }: IconCardProps) {
+function IconCard({ icon, iconBg, label, value, valueClass, cardClass }: IconCardProps) {
   return (
-    <Card className="shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-elev)]">
+    <Card
+      className={cn(
+        "shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-elev)]",
+        cardClass,
+      )}
+    >
       <CardContent className="flex items-center gap-4 p-4 sm:p-5">
         <div
           className={cn(
@@ -141,12 +147,18 @@ export function PerformanceExecutivoPanel({
   const totals = useMemo(() => {
     const gerentes = uniq(projetos.map((p) => p.gerente)).length;
     const lideres = uniq(projetos.map((p) => p.lider)).length;
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo os validados pela controladoria.
     const savingPrev = projetos.reduce(
-      (s, p) => s + p.savingPrevistoEfetivo,
+      (s, p) => s + p.savingPrevistoPendente,
       0,
     );
     const savingAprov = projetos.reduce(
       (s, p) => s + p.savingAprovadoEfetivo,
+      0,
+    );
+    // Coluna Q dos projetos "Validado pela controladoria".
+    const previstoValidados = projetos.reduce(
+      (s, p) => s + p.totalPrevistoValidado,
       0,
     );
     return {
@@ -155,6 +167,7 @@ export function PerformanceExecutivoPanel({
       projetos: projetos.length,
       savingPrev,
       savingAprov,
+      previstoValidados,
     };
   }, [projetos]);
 
@@ -186,7 +199,7 @@ export function PerformanceExecutivoPanel({
       const lista = projetos.filter((p) => (p.gerente || "").trim() === g);
       return {
         name: g,
-        previsto: lista.reduce((s, p) => s + p.savingPrevistoEfetivo, 0),
+        previsto: lista.reduce((s, p) => s + p.savingPrevistoPendente, 0),
         aprovado: lista.reduce((s, p) => s + p.savingAprovadoEfetivo, 0),
         meta: metaByGerente.get(g) || 0,
       };

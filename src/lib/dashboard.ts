@@ -48,6 +48,39 @@ export const FASE_ORDER: { key: keyof Projeto; label: string; pct: number }[] = 
   { key: "fase5", label: "Fase 5 - Finalizado / Coletando Dados", pct: 0.9 },
 ];
 
+/* =======================================================================
+ * REGRAS CENTRAIS DE STATUS (fonte única de verdade — coluna W)
+ * ===================================================================== */
+export const norm = (s: string | null | undefined) => (s || "").trim().toLowerCase();
+export const isValidadoControladoria = (status: string | null | undefined) =>
+  norm(status) === "validado pela controladoria";
+export const isEmValidacaoControladoria = (status: string | null | undefined) =>
+  norm(status) === "em validação pela controladoria";
+export const isInviabilizado = (status: string | null | undefined) =>
+  norm(status) === "inviabilizado";
+
+/** Percentual oficial da 5ª Fase. */
+export const PCT_QUINTA_FASE = 90;
+
+/**
+ * REGRA OFICIAL DA 5ª FASE (quantidade apresentada):
+ * um projeto na 5ª fase só é contabilizado quando NÃO estiver
+ * "Em validação pela controladoria".
+ * A fase real e o status do projeto permanecem inalterados.
+ */
+export function contaNaQuintaFase(
+  pctConclusao: number,
+  status: string | null | undefined,
+): boolean {
+  return (
+    Math.round(pctConclusao * 100) === PCT_QUINTA_FASE &&
+    !isEmValidacaoControladoria(status)
+  );
+}
+
+/** Rótulo de fase (faseAtual) considerado 5ª fase. */
+export const isFase5Label = (faseAtual: string) => faseAtual.startsWith("Fase 5");
+
 export type EnrichedProjeto = Projeto & {
   faseAtual: string;
   faseAtualPct: number;
@@ -62,6 +95,21 @@ export type EnrichedProjeto = Projeto & {
   savingAprovadoEfetivo: number;
   /** Saving previsto válido: 0 quando o projeto está "Inviabilizado". */
   savingPrevistoEfetivo: number;
+  /**
+   * Saving previsto apresentado no card "Saving Previsto (12 meses)":
+   * usa a COLUNA P e zera projetos "Inviabilizado" e "Validado pela controladoria"
+   * (o previsto do validado é subtraído do total apresentado).
+   */
+  savingPrevistoPendente: number;
+  /**
+   * Card "Total de Valores Previstos dos Projetos Validados":
+   * COLUNA Q, somente projetos "Validado pela controladoria".
+   */
+  totalPrevistoValidado: number;
+  /** true quando o status é "Em validação pela controladoria". */
+  emValidacaoControladoria: boolean;
+  /** true quando o projeto deve ser contabilizado na quantidade da 5ª Fase. */
+  contaQuintaFase: boolean;
 };
 
 const parseDate = (v: string | null): Date | null => {
@@ -200,10 +248,17 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     // Saving aprovado só conta quando validado pela controladoria.
     savingAprovadoEfetivo: validado ? Number(p.saving_aprovado) || 0 : 0,
     // Saving previsto (12 meses) desconsidera projetos inviabilizados.
-    savingPrevistoEfetivo:
-      (p.status || "").trim().toLowerCase() === "inviabilizado"
-        ? 0
-        : Number(p.saving_previsto) || 0,
+    savingPrevistoEfetivo: isInviabilizado(p.status)
+      ? 0
+      : Number(p.saving_previsto) || 0,
+    // Card "Saving Previsto (12 meses)": coluna P, sem inviabilizados e
+    // subtraindo (zerando) os projetos já validados pela controladoria.
+    savingPrevistoPendente:
+      isInviabilizado(p.status) || validado ? 0 : Number(p.saving_previsto) || 0,
+    // Card "Total de Valores Previstos dos Projetos Validados": coluna Q dos validados.
+    totalPrevistoValidado: validado ? Number(p.saving_aprovado) || 0 : 0,
+    emValidacaoControladoria: isEmValidacaoControladoria(p.status),
+    contaQuintaFase: contaNaQuintaFase(faseAtualPct, p.status),
   };
 }
 

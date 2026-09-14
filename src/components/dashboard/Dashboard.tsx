@@ -60,6 +60,10 @@ import {
   fmtPct,
   pareto,
   uniq,
+  isFase5Label,
+  isInviabilizado,
+  isEmValidacaoControladoria,
+  contaNaQuintaFase,
   type Projeto,
   type EnrichedProjeto,
 } from "@/lib/dashboard";
@@ -408,9 +412,12 @@ export default function Dashboard() {
     const finalizados = projetos.filter(
       (p) => p.faseAtual.startsWith("Fase 5") || p.concluido
     );
-    const savingPrev = projetos.reduce((s, p) => s + p.savingPrevistoEfetivo, 0);
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo os validados pela controladoria.
+    const savingPrev = projetos.reduce((s, p) => s + p.savingPrevistoPendente, 0);
     // Saving aprovado: SOMENTE projetos com status "Validado pela controladoria" (coluna W).
     const savingAprov = projetos.reduce((s, p) => s + p.savingAprovadoEfetivo, 0);
+    // Total de valores previstos dos projetos validados: coluna Q dos validados.
+    const previstoValidados = projetos.reduce((s, p) => s + p.totalPrevistoValidado, 0);
     const investimento = projetos.reduce((s, p) => s + (Number(p.investimento) || 0), 0);
     const pctMedio =
       projetos.length === 0
@@ -423,6 +430,7 @@ export default function Dashboard() {
       finalizados: finalizados.length,
       savingPrev,
       savingAprov,
+      previstoValidados,
       investimento,
       pctMedio,
     };
@@ -442,9 +450,15 @@ export default function Dashboard() {
     return { tempoMedio, atrasados, noPrazo, semPrazo };
   }, [projetos]);
 
+  // REGRA 5ª FASE: projetos na 5ª fase "Em validação pela controladoria" não são contabilizados.
+  const contabilizaFase = (p: EnrichedProjeto) =>
+    !isFase5Label(p.faseAtual) || p.contaQuintaFase;
+
   const distFases = useMemo(() => {
     const m = new Map<string, number>();
-    projetos.forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
+    projetos
+      .filter(contabilizaFase)
+      .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
     return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
       (a, b) => b.qtd - a.qtd
     );
@@ -454,7 +468,7 @@ export default function Dashboard() {
   const distFasesVisao = useMemo(() => {
     const m = new Map<string, number>();
     projetos
-      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .filter((p) => !isInviabilizado(p.status) && contabilizaFase(p))
       .forEach((p) => m.set(p.faseAtual, (m.get(p.faseAtual) || 0) + 1));
     return Array.from(m, ([fase, qtd]) => ({ fase, qtd })).sort(
       (a, b) => b.qtd - a.qtd
@@ -829,7 +843,9 @@ export default function Dashboard() {
   const distPctConclusao = useMemo(() => {
     const m = new Map<number, number>();
     projetos
-      .filter((p) => (p.status || "").trim().toLowerCase() !== "inviabilizado")
+      .filter((p) => !isInviabilizado(p.status))
+      // REGRA 5ª FASE: 5ª fase "Em validação pela controladoria" não é contabilizada.
+      .filter((p) => Math.round(p.pctConclusao * 100) !== 90 || p.contaQuintaFase)
       .forEach((p) => {
         const pct = Math.round(p.pctConclusao * 100);
         m.set(pct, (m.get(pct) || 0) + 1);
@@ -1017,7 +1033,7 @@ export default function Dashboard() {
 
         {/* KPIs */}
         {showIndicators && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 animate-in fade-in slide-in-from-top-2 duration-300">
             <Kpi
               tone="primary"
               label="Total de Projetos"
@@ -1036,7 +1052,7 @@ export default function Dashboard() {
             <Kpi
               label="Saving Previsto (12 meses)"
               value={fmtMoney(totals.savingPrev)}
-              sub="Coluna P · todos os projetos"
+              sub="Coluna P · exclui validados pela controladoria"
               icon={<DollarSign className="h-5 w-5" />}
             />
             <Kpi
@@ -1044,6 +1060,14 @@ export default function Dashboard() {
               value={fmtMoney(totals.savingAprov)}
               sub='Coluna Q · apenas status "Validado pela controladoria"'
               icon={<CheckCircle2 className="h-5 w-5" />}
+              className="border-green-100 bg-green-50/70 dark:border-green-900/40 dark:bg-green-950/20"
+            />
+            <Kpi
+              label="Total de Valores Previstos dos Projetos Validados"
+              value={fmtMoney(totals.previstoValidados)}
+              sub='Coluna Q · projetos "Validado pela controladoria"'
+              icon={<DollarSign className="h-5 w-5" />}
+              className="border-yellow-100 bg-yellow-50/70 dark:border-yellow-900/40 dark:bg-yellow-950/20"
             />
             <Kpi
               tone="info"
