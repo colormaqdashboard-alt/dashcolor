@@ -355,7 +355,7 @@ export function PerformanceExecutivoPanel({
       </SectionCard>
 
       {/* Linha 2 — Cards principais */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-9">
         <div className="lg:col-span-1"><IconCard
           icon={<Users className="h-6 w-6" />}
           iconBg="bg-sky-500"
@@ -385,6 +385,14 @@ export function PerformanceExecutivoPanel({
           iconBg="bg-green-600"
           label="Saving Aprovado pela Controladoria"
           value={fmtMoney(totals.savingAprov)}
+          cardClass="bg-green-50/70 border-green-100 dark:bg-green-950/20 dark:border-green-900/40"
+        /></div>
+        <div className="lg:col-span-2"><IconCard
+          icon={<DollarSign className="h-6 w-6" />}
+          iconBg="bg-yellow-500"
+          label="Total de Valores Previstos dos Projetos Validados"
+          value={fmtMoney(totals.previstoValidados)}
+          cardClass="bg-yellow-50/70 border-yellow-100 dark:bg-yellow-950/20 dark:border-yellow-900/40"
         /></div>
       </div>
 
