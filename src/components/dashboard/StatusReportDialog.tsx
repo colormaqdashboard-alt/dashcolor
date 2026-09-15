@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileCode2 } from "lucide-react";
+import { contaNaQuintaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import {
   downloadHtml,
   generateStatusReportHTML,
@@ -56,8 +57,13 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, novo
     const base = filtered.filter(
       (r) => (r.status || "").trim().toLowerCase() !== "inviabilizado",
     );
+    // REGRA CENTRAL: a 5ª Fase não contabiliza projetos "Em validação pela controladoria".
     const cnt = (pct: number) =>
-      base.filter((r) => Math.round(r.pctConclusao * 100) === pct).length;
+      base.filter(
+        (r) =>
+          Math.round(r.pctConclusao * 100) === pct &&
+          (pct !== PCT_QUINTA_FASE || contaNaQuintaFase(r.pctConclusao, r.status)),
+      ).length;
     return {
       novos: novosTotal,
       p0: cnt(0),

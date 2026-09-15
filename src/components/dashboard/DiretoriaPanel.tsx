@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtDate } from "@/lib/dashboard";
+import { fmtDate, contaNaQuintaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import type { StatusReportRow } from "@/lib/status-report";
 
 type Props = {
@@ -81,8 +81,13 @@ export function DiretoriaPanel({ rows, novosTotal = 0 }: Props) {
 
   const counts = useMemo(() => {
     const base = filtered.filter((r) => (r.status || "").trim().toLowerCase() !== "inviabilizado");
+    // REGRA CENTRAL: a 5ª Fase não contabiliza projetos "Em validação pela controladoria".
     const cnt = (pct: number) =>
-      base.filter((r) => Math.round(r.pctConclusao * 100) === pct).length;
+      base.filter(
+        (r) =>
+          Math.round(r.pctConclusao * 100) === pct &&
+          (pct !== PCT_QUINTA_FASE || contaNaQuintaFase(r.pctConclusao, r.status)),
+      ).length;
     return {
       total: filtered.length,
       emValidacao: filtered.filter(
