@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileCode2 } from "lucide-react";
+import { contaNaQuintaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import {
   downloadHtml,
   generateStatusReportHTML,
