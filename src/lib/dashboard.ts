@@ -108,13 +108,14 @@ export type EnrichedProjeto = Projeto & {
   savingPrevistoEfetivo: number;
   /**
    * Saving previsto apresentado no card "Saving Previsto (12 meses)":
-   * usa a COLUNA P e zera projetos "Inviabilizado" e "Validado pela controladoria"
-   * (o previsto do validado é subtraído do total apresentado).
+   * usa a COLUNA P e zera projetos "Inviabilizado", "Validado pela controladoria"
+   * e "Reprovado pela controladoria" (a coluna P desses é subtraída do total).
    */
   savingPrevistoPendente: number;
   /**
    * Card "Total de Valores Previstos dos Projetos Validados":
-   * COLUNA Q, somente projetos "Validado pela controladoria".
+   * COLUNA P (valor originalmente previsto), somente projetos
+   * "Validado pela controladoria". NUNCA coluna Q.
    */
   totalPrevistoValidado: number;
   /** true quando o status é "Em validação pela controladoria". */
