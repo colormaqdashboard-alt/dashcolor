@@ -58,6 +58,17 @@ export const isEmValidacaoControladoria = (status: string | null | undefined) =>
   norm(status) === "em validação pela controladoria";
 export const isInviabilizado = (status: string | null | undefined) =>
   norm(status) === "inviabilizado";
+export const isReprovadoControladoria = (status: string | null | undefined) =>
+  norm(status) === "reprovado pela controladoria";
+
+/**
+ * REGRA CENTRAL — status que NÃO compõem o card "Saving Previsto (12 meses)".
+ * Coluna P desses projetos é subtraída do total apresentado.
+ */
+export const excluiDoSavingPrevisto = (status: string | null | undefined) =>
+  isInviabilizado(status) ||
+  isValidadoControladoria(status) ||
+  isReprovadoControladoria(status);
 
 /** Percentual oficial da 5ª Fase. */
 export const PCT_QUINTA_FASE = 90;
