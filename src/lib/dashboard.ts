@@ -263,12 +263,13 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     savingPrevistoEfetivo: isInviabilizado(p.status)
       ? 0
       : Number(p.saving_previsto) || 0,
-    // Card "Saving Previsto (12 meses)": coluna P, sem inviabilizados e
-    // subtraindo (zerando) os projetos já validados pela controladoria.
-    savingPrevistoPendente:
-      isInviabilizado(p.status) || validado ? 0 : Number(p.saving_previsto) || 0,
-    // Card "Total de Valores Previstos dos Projetos Validados": coluna Q dos validados.
-    totalPrevistoValidado: validado ? Number(p.saving_aprovado) || 0 : 0,
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo (zerando) os
+    // projetos "Inviabilizado", "Validado" e "Reprovado pela controladoria".
+    savingPrevistoPendente: excluiDoSavingPrevisto(p.status)
+      ? 0
+      : Number(p.saving_previsto) || 0,
+    // Card "Total de Valores Previstos dos Projetos Validados": COLUNA P dos validados.
+    totalPrevistoValidado: validado ? Number(p.saving_previsto) || 0 : 0,
     emValidacaoControladoria: isEmValidacaoControladoria(p.status),
     contaQuintaFase: contaNaQuintaFase(faseAtualPct, p.status),
   };
