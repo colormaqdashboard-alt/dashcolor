@@ -58,6 +58,17 @@ export const isEmValidacaoControladoria = (status: string | null | undefined) =>
   norm(status) === "em validação pela controladoria";
 export const isInviabilizado = (status: string | null | undefined) =>
   norm(status) === "inviabilizado";
+export const isReprovadoControladoria = (status: string | null | undefined) =>
+  norm(status) === "reprovado pela controladoria";
+
+/**
+ * REGRA CENTRAL — status que NÃO compõem o card "Saving Previsto (12 meses)".
+ * Coluna P desses projetos é subtraída do total apresentado.
+ */
+export const excluiDoSavingPrevisto = (status: string | null | undefined) =>
+  isInviabilizado(status) ||
+  isValidadoControladoria(status) ||
+  isReprovadoControladoria(status);
 
 /** Percentual oficial da 5ª Fase. */
 export const PCT_QUINTA_FASE = 90;
@@ -97,13 +108,14 @@ export type EnrichedProjeto = Projeto & {
   savingPrevistoEfetivo: number;
   /**
    * Saving previsto apresentado no card "Saving Previsto (12 meses)":
-   * usa a COLUNA P e zera projetos "Inviabilizado" e "Validado pela controladoria"
-   * (o previsto do validado é subtraído do total apresentado).
+   * usa a COLUNA P e zera projetos "Inviabilizado", "Validado pela controladoria"
+   * e "Reprovado pela controladoria" (a coluna P desses é subtraída do total).
    */
   savingPrevistoPendente: number;
   /**
    * Card "Total de Valores Previstos dos Projetos Validados":
-   * COLUNA Q, somente projetos "Validado pela controladoria".
+   * COLUNA P (valor originalmente previsto), somente projetos
+   * "Validado pela controladoria". NUNCA coluna Q.
    */
   totalPrevistoValidado: number;
   /** true quando o status é "Em validação pela controladoria". */
@@ -251,12 +263,13 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     savingPrevistoEfetivo: isInviabilizado(p.status)
       ? 0
       : Number(p.saving_previsto) || 0,
-    // Card "Saving Previsto (12 meses)": coluna P, sem inviabilizados e
-    // subtraindo (zerando) os projetos já validados pela controladoria.
-    savingPrevistoPendente:
-      isInviabilizado(p.status) || validado ? 0 : Number(p.saving_previsto) || 0,
-    // Card "Total de Valores Previstos dos Projetos Validados": coluna Q dos validados.
-    totalPrevistoValidado: validado ? Number(p.saving_aprovado) || 0 : 0,
+    // Card "Saving Previsto (12 meses)": coluna P, subtraindo (zerando) os
+    // projetos "Inviabilizado", "Validado" e "Reprovado pela controladoria".
+    savingPrevistoPendente: excluiDoSavingPrevisto(p.status)
+      ? 0
+      : Number(p.saving_previsto) || 0,
+    // Card "Total de Valores Previstos dos Projetos Validados": COLUNA P dos validados.
+    totalPrevistoValidado: validado ? Number(p.saving_previsto) || 0 : 0,
     emValidacaoControladoria: isEmValidacaoControladoria(p.status),
     contaQuintaFase: contaNaQuintaFase(faseAtualPct, p.status),
   };
