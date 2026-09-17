@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileCode2 } from "lucide-react";
-import { toast } from "sonner";
 import { contaNaQuintaFase, norm, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import {
   downloadHtml,
@@ -236,15 +235,15 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, novo
     };
   }, [filtered, novosTotal]);
 
+  const aviso =
+    fasesCount === 0
+      ? "Selecione pelo menos uma Fase para gerar o relatório."
+      : statusCount === 0
+        ? "Selecione pelo menos um Status para gerar o relatório."
+        : null;
+
   const handleGenerate = () => {
-    if (fasesCount === 0) {
-      toast.error("Selecione pelo menos uma Fase para gerar o relatório.");
-      return;
-    }
-    if (statusCount === 0) {
-      toast.error("Selecione pelo menos um Status para gerar o relatório.");
-      return;
-    }
+    if (aviso) return;
     const html = generateStatusReportHTML(filtered, {
       logoDataUri,
       selectedManagers: selectedCount,
@@ -299,11 +298,17 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, novo
           onChange={setStatusSel}
         />
 
+        {aviso && (
+          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {aviso}
+          </p>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleGenerate} disabled={filtered.length === 0}>
+          <Button onClick={handleGenerate} disabled={!!aviso || filtered.length === 0}>
             <FileCode2 className="mr-2 h-4 w-4" />
             Gerar Relatório HTML
           </Button>
