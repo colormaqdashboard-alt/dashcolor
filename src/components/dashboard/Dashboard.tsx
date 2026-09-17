@@ -159,28 +159,29 @@ function loadPersistedSource(): SourceState | null {
 }
 
 export default function Dashboard() {
-  const [source, setSource] = useState<SourceState>(() => {
-    const persisted = loadPersistedSource();
-    if (persisted) return persisted;
-    return {
-      label: "Dados de exemplo (interno)",
-      detail: `${RAW.projetos.length} projetos`,
-      projetos: RAW.projetos as Projeto[],
-      metas: RAW.metas || [],
-      novosProjetos: [],
-      updatedAt: new Date(),
-    };
-  });
-  const [sheetUrl, setSheetUrl] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    try {
-      return window.localStorage.getItem(SHEET_URL_KEY) || "";
-    } catch {
-      return "";
-    }
-  });
+  const [source, setSource] = useState<SourceState>(() => ({
+    label: "Dados de exemplo (interno)",
+    detail: `${RAW.projetos.length} projetos`,
+    projetos: RAW.projetos as Projeto[],
+    metas: RAW.metas || [],
+    novosProjetos: [],
+    updatedAt: new Date(),
+  }));
+  const [sheetUrl, setSheetUrl] = useState<string>("");
   const [loadingSource, setLoadingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
+
+  // Cache local só após a hidratação (evita divergência SSR/cliente).
+  useEffect(() => {
+    const persisted = loadPersistedSource();
+    if (persisted) setSource(persisted);
+    try {
+      const url = window.localStorage.getItem(SHEET_URL_KEY);
+      if (url) setSheetUrl(url);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Hidrata do Cloud (compartilhado para todos os visitantes). Se houver
   // snapshot na nuvem mais recente que o cache local, substitui o estado.
