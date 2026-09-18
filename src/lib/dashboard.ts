@@ -60,6 +60,8 @@ export const isInviabilizado = (status: string | null | undefined) =>
   norm(status) === "inviabilizado";
 export const isReprovadoControladoria = (status: string | null | undefined) =>
   norm(status) === "reprovado pela controladoria";
+export const isBloqueado = (status: string | null | undefined) =>
+  norm(status) === "bloqueado";
 
 /**
  * REGRA CENTRAL — status que NÃO compõem o card "Saving Previsto (12 meses)".
@@ -68,7 +70,15 @@ export const isReprovadoControladoria = (status: string | null | undefined) =>
 export const excluiDoSavingPrevisto = (status: string | null | undefined) =>
   isInviabilizado(status) ||
   isValidadoControladoria(status) ||
-  isReprovadoControladoria(status);
+  isReprovadoControladoria(status) ||
+  isBloqueado(status);
+
+/**
+ * REGRA CENTRAL — status que NÃO são contabilizados na QUANTIDADE
+ * apresentada de nenhuma fase (o projeto continua na base).
+ */
+export const excluiDaContagemFase = (status: string | null | undefined) =>
+  isBloqueado(status) || isReprovadoControladoria(status);
 
 /** Percentual oficial da 5ª Fase. */
 export const PCT_QUINTA_FASE = 90;
@@ -87,6 +97,25 @@ export function contaNaQuintaFase(
     Math.round(pctConclusao * 100) === PCT_QUINTA_FASE &&
     !isEmValidacaoControladoria(status)
   );
+}
+
+/**
+ * REGRA CENTRAL — o projeto é contabilizado na QUANTIDADE apresentada da sua fase?
+ * Vale para TODAS as fases:
+ *  - "Bloqueado" e "Reprovado pela controladoria" nunca contam;
+ *  - 5ª Fase + "Em validação pela controladoria" não conta (regra anterior preservada).
+ */
+export function contaNaFase(
+  pctConclusao: number,
+  status: string | null | undefined,
+): boolean {
+  if (excluiDaContagemFase(status)) return false;
+  if (
+    Math.round(pctConclusao * 100) === PCT_QUINTA_FASE &&
+    isEmValidacaoControladoria(status)
+  )
+    return false;
+  return true;
 }
 
 /** Rótulo de fase (faseAtual) considerado 5ª fase. */
@@ -122,6 +151,8 @@ export type EnrichedProjeto = Projeto & {
   emValidacaoControladoria: boolean;
   /** true quando o projeto deve ser contabilizado na quantidade da 5ª Fase. */
   contaQuintaFase: boolean;
+  /** true quando o projeto entra na QUANTIDADE apresentada da sua fase (qualquer fase). */
+  contaFaseApresentada: boolean;
 };
 
 const parseDate = (v: string | null): Date | null => {
@@ -272,6 +303,7 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     totalPrevistoValidado: validado ? Number(p.saving_previsto) || 0 : 0,
     emValidacaoControladoria: isEmValidacaoControladoria(p.status),
     contaQuintaFase: contaNaQuintaFase(faseAtualPct, p.status),
+    contaFaseApresentada: contaNaFase(faseAtualPct, p.status),
   };
 }
 

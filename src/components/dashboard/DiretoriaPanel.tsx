@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtDate, contaNaQuintaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
+import { fmtDate, contaNaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import type { StatusReportRow } from "@/lib/status-report";
 
 type Props = {
@@ -86,7 +86,7 @@ export function DiretoriaPanel({ rows, novosTotal = 0 }: Props) {
       base.filter(
         (r) =>
           Math.round(r.pctConclusao * 100) === pct &&
-          (pct !== PCT_QUINTA_FASE || contaNaQuintaFase(r.pctConclusao, r.status)),
+          contaNaFase(r.pctConclusao, r.status),
       ).length;
     return {
       total: filtered.length,
