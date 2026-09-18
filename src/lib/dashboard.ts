@@ -151,6 +151,8 @@ export type EnrichedProjeto = Projeto & {
   emValidacaoControladoria: boolean;
   /** true quando o projeto deve ser contabilizado na quantidade da 5ª Fase. */
   contaQuintaFase: boolean;
+  /** true quando o projeto entra na QUANTIDADE apresentada da sua fase (qualquer fase). */
+  contaFaseApresentada: boolean;
 };
 
 const parseDate = (v: string | null): Date | null => {
