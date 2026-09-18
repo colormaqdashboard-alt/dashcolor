@@ -219,7 +219,7 @@ export function StatusReportDialog({ open, onOpenChange, rows, logoDataUri, novo
       base.filter(
         (r) =>
           Math.round(r.pctConclusao * 100) === pct &&
-          (pct !== PCT_QUINTA_FASE || contaNaQuintaFase(r.pctConclusao, r.status)),
+          contaNaFase(r.pctConclusao, r.status),
       ).length;
     return {
       novos: novosTotal,
