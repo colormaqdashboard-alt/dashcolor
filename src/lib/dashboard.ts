@@ -99,6 +99,25 @@ export function contaNaQuintaFase(
   );
 }
 
+/**
+ * REGRA CENTRAL — o projeto é contabilizado na QUANTIDADE apresentada da sua fase?
+ * Vale para TODAS as fases:
+ *  - "Bloqueado" e "Reprovado pela controladoria" nunca contam;
+ *  - 5ª Fase + "Em validação pela controladoria" não conta (regra anterior preservada).
+ */
+export function contaNaFase(
+  pctConclusao: number,
+  status: string | null | undefined,
+): boolean {
+  if (excluiDaContagemFase(status)) return false;
+  if (
+    Math.round(pctConclusao * 100) === PCT_QUINTA_FASE &&
+    isEmValidacaoControladoria(status)
+  )
+    return false;
+  return true;
+}
+
 /** Rótulo de fase (faseAtual) considerado 5ª fase. */
 export const isFase5Label = (faseAtual: string) => faseAtual.startsWith("Fase 5");
 
