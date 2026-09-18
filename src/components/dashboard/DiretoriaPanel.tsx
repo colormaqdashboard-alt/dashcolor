@@ -86,7 +86,7 @@ export function DiretoriaPanel({ rows, novosTotal = 0 }: Props) {
       base.filter(
         (r) =>
           Math.round(r.pctConclusao * 100) === pct &&
-          (pct !== PCT_QUINTA_FASE || contaNaQuintaFase(r.pctConclusao, r.status)),
+          contaNaFase(r.pctConclusao, r.status),
       ).length;
     return {
       total: filtered.length,
