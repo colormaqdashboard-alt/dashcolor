@@ -60,6 +60,8 @@ export const isInviabilizado = (status: string | null | undefined) =>
   norm(status) === "inviabilizado";
 export const isReprovadoControladoria = (status: string | null | undefined) =>
   norm(status) === "reprovado pela controladoria";
+export const isBloqueado = (status: string | null | undefined) =>
+  norm(status) === "bloqueado";
 
 /**
  * REGRA CENTRAL — status que NÃO compõem o card "Saving Previsto (12 meses)".
@@ -68,7 +70,15 @@ export const isReprovadoControladoria = (status: string | null | undefined) =>
 export const excluiDoSavingPrevisto = (status: string | null | undefined) =>
   isInviabilizado(status) ||
   isValidadoControladoria(status) ||
-  isReprovadoControladoria(status);
+  isReprovadoControladoria(status) ||
+  isBloqueado(status);
+
+/**
+ * REGRA CENTRAL — status que NÃO são contabilizados na QUANTIDADE
+ * apresentada de nenhuma fase (o projeto continua na base).
+ */
+export const excluiDaContagemFase = (status: string | null | undefined) =>
+  isBloqueado(status) || isReprovadoControladoria(status);
 
 /** Percentual oficial da 5ª Fase. */
 export const PCT_QUINTA_FASE = 90;
