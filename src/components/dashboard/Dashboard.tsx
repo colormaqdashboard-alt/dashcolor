@@ -451,9 +451,9 @@ export default function Dashboard() {
     return { tempoMedio, atrasados, noPrazo, semPrazo };
   }, [projetos]);
 
-  // REGRA 5ª FASE: projetos na 5ª fase "Em validação pela controladoria" não são contabilizados.
-  const contabilizaFase = (p: EnrichedProjeto) =>
-    !isFase5Label(p.faseAtual) || p.contaQuintaFase;
+  // REGRA CENTRAL (src/lib/dashboard.ts): "Bloqueado" e "Reprovado pela controladoria"
+  // não contam em nenhuma fase; 5ª fase "Em validação pela controladoria" também não.
+  const contabilizaFase = (p: EnrichedProjeto) => p.contaFaseApresentada;
 
   const distFases = useMemo(() => {
     const m = new Map<string, number>();
