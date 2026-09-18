@@ -845,8 +845,8 @@ export default function Dashboard() {
     const m = new Map<number, number>();
     projetos
       .filter((p) => !isInviabilizado(p.status))
-      // REGRA 5ª FASE: 5ª fase "Em validação pela controladoria" não é contabilizada.
-      .filter((p) => Math.round(p.pctConclusao * 100) !== 90 || p.contaQuintaFase)
+      // REGRA CENTRAL: Bloqueado/Reprovado nunca contam; 5ª fase "Em validação" também não.
+      .filter((p) => p.contaFaseApresentada)
       .forEach((p) => {
         const pct = Math.round(p.pctConclusao * 100);
         m.set(pct, (m.get(pct) || 0) + 1);
