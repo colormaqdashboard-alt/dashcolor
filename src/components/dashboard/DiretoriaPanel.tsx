@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fmtDate, contaNaQuintaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
+import { fmtDate, contaNaFase, PCT_QUINTA_FASE } from "@/lib/dashboard";
 import type { StatusReportRow } from "@/lib/status-report";
 
 type Props = {
