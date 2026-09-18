@@ -303,6 +303,7 @@ export function enrich(p: Projeto, today = new Date()): EnrichedProjeto {
     totalPrevistoValidado: validado ? Number(p.saving_previsto) || 0 : 0,
     emValidacaoControladoria: isEmValidacaoControladoria(p.status),
     contaQuintaFase: contaNaQuintaFase(faseAtualPct, p.status),
+    contaFaseApresentada: contaNaFase(faseAtualPct, p.status),
   };
 }
 
